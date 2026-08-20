@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "samples": 50,
+  "x": 4.275112442278064,
+  "y": -1.9522534788074815,
+  "yaw": -0.421499968000555,
+  "yaw_degrees": -24.150169231331056,
+  "position_spread_meters": 0.006716421406817933,
+  "created_at_unix": 1787043252.6225708,
+  "point_name": "turn_3",
+  "map_version": "embodied_lab_panorama_v2",
+  "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
+  "coordinate_frame": "map",
+  "boot_id": "32367efd-33a8-4487-976e-4fdbb209df97",
+  "saved_at_unix": 1787043252.7769232,
+  "source": "/unitree/slam_relocation/odom"
+}

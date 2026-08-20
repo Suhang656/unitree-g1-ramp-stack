@@ -1,0 +1,19 @@
+[Unit]
+Description=Unitree G1 local web tour executor
+After=g1-local-assistant.service g1-voice-bridge.service
+Wants=g1-local-assistant.service g1-voice-bridge.service
+
+[Service]
+Type=simple
+User=unitree
+Group=unitree
+WorkingDirectory=/home/unitree/智能中控
+EnvironmentFile=-/etc/default/g1-ramp-stack
+ExecStart=/usr/bin/bash /home/unitree/智能中控/scripts/start_g1_tour_executor.sh
+Restart=always
+RestartSec=3
+TimeoutStopSec=10
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

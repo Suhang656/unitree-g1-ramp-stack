@@ -1,0 +1,25 @@
+{
+  "version": "embodied_lab_panorama_v2",
+  "created_at_unix": 1787041045.0901968,
+  "official_slam_map": "/home/unitree/g1_internal_panorama_v2.pcd",
+  "nx_backup_map": "/home/unitree/g1_embodied_lab_panorama_v2_nx.pcd",
+  "nx_backup_sha256": "ca085ee9796feb252521228b1e3fb375985cee87c1a2a2fc46116cecfa8c05c3",
+  "nx_backup_points": 627082,
+  "voxel_size_m": 0.06,
+  "fixed_boot_location": "straight_begin",
+  "fixed_boot_pose": {
+    "x": 0.024735889031391838,
+    "y": -0.08662520735348705,
+    "yaw": -0.3986063585212273,
+    "yaw_degrees": -22.838462030344882
+  },
+  "position_spread_meters": 0.005309533756340157,
+  "notes": "G1固定停在坡道起点并面向终点开机；官方定位使用internal SLAM地图，NX PCD只用于备份和可视化",
+  "previous_fixed_boot_pose": {
+    "x": -0.7782594124163063,
+    "y": 0.42958332566340995,
+    "yaw": -0.3917893228866826,
+    "yaw_degrees": -22.447874659695184
+  },
+  "updated_at_unix": 1787103231.1468632
+}

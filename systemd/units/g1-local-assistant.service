@@ -1,0 +1,24 @@
+[Unit]
+Description=Unitree G1 local voice motion assistant
+Requires=g1-ramp-v3-bootstrap.service
+After=g1-ramp-v3-bootstrap.service
+
+[Service]
+Type=simple
+User=unitree
+WorkingDirectory=/home/unitree/智能中控
+EnvironmentFile=-/etc/default/g1-ramp-stack
+EnvironmentFile=-/home/unitree/智能中控/.env
+Environment=ROS_DISTRO=humble
+Environment=SMART_CENTER_ROS_PYTHON=/usr/bin/python3
+Environment=G1_EXTERNAL_VOICE_BRIDGE=1
+ExecStart=/usr/bin/bash /home/unitree/智能中控/scripts/start_g1_local_assistant.sh
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143 SIGTERM
+TimeoutStopSec=20
+KillMode=control-group
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

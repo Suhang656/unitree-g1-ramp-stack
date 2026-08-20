@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <title>G1 运动控制台</title>
+  <link rel="stylesheet" href="/control.css?v=4">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">UNITREE G1 · SMART CENTER</div>
+        <h1>运动控制台</h1>
+        <p>官方导航路线与内置动作的确定性控制入口</p>
+      </div>
+      <div class="status-cluster">
+        <span id="bridge-status" class="pill offline"><i></i>运动桥离线</span>
+        <span id="location-status" class="pill waiting"><i></i>等待定位</span>
+      </div>
+    </header>
+
+    <section class="telemetry panel">
+      <div><span>当前位置 X</span><strong id="pose-x">--</strong></div>
+      <div><span>当前位置 Y</span><strong id="pose-y">--</strong></div>
+      <div><span>里程计年龄</span><strong id="odom-age">--</strong></div>
+      <div><span>当前任务</span><strong id="task-state">空闲</strong></div>
+    </section>
+
+    <section>
+      <div class="section-title"><div><span>ROUTE</span><h2>坡道路线</h2></div><p>路线动作仅在本次开机定位成功后开放</p></div>
+      <div id="ramp-actions" class="action-grid route-grid"></div>
+    </section>
+
+    <section>
+      <div class="section-title"><div><span>POSTURE</span><h2>姿态模式</h2></div><p>切换前确保机器人静止且周围无障碍</p></div>
+      <div id="mode-actions" class="action-grid"></div>
+    </section>
+
+    <section>
+      <div class="section-title"><div><span>ARM ACTION</span><h2>内置动作</h2></div><p>使用 G1 官方 ArmAction 白名单</p></div>
+      <div id="gesture-actions" class="action-grid compact"></div>
+    </section>
+
+    <section>
+      <div class="section-title"><div><span>TOUR EDITOR</span><h2>导览路线与讲解</h2></div><p>拖动顺序并编辑每站播报；每次前往下一站都需要再次确认</p></div>
+      <div class="tour-panel panel">
+        <div class="tour-toolbar">
+          <div><strong id="tour-online-state">导览执行器状态未知</strong><small id="tour-progress">尚未开始导览</small></div>
+          <div class="tour-toolbar-actions">
+            <button id="save-tour" class="secondary-button" type="button">保存路线与讲解</button>
+            <button id="start-tour" class="primary-button" type="button">开始导览</button>
+            <button id="continue-tour" class="secondary-button" type="button" disabled>继续下一站</button>
+            <button id="reset-tour-ui" class="text-button" type="button">清除任务显示</button>
+          </div>
+        </div>
+        <div class="tour-fixed-note">固定流程：每站到达后先执行已录制的 Please 示教动作，再语音讲解。guide_1 讲解后自动执行“转弯前进 → 直线返回 → 回到 guide_1”。</div>
+        <form id="tour-add-form" class="tour-add-form">
+          <div class="tour-add-heading"><strong>现场采集并新增导览点</strong><small>让 G1 在新讲解点站直静止并保持讲解朝向</small></div>
+          <div class="tour-add-grid">
+            <label>点位标识<input id="tour-new-name" maxlength="40" placeholder="例如：guide_4" required></label>
+            <label>网页显示名称<input id="tour-new-title" maxlength="40" placeholder="例如：视觉感知展示" required></label>
+          </div>
+          <label>到站播报内容<textarea id="tour-new-speech" maxlength="1000" placeholder="输入该点位的自定义讲解内容" required></textarea></label>
+          <button id="tour-add-button" class="primary-button" type="submit">采集50帧实时点位并加入路线</button>
+        </form>
+        <div id="tour-editor" class="tour-editor"><p class="muted">尚未读取导览配置</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><div><span>TOUR WAYPOINT</span><h2>导览点标记</h2></div><p>让 G1 站直静止并保持讲解朝向，再采集 50 帧定位</p></div>
+      <div class="waypoint-panel panel">
+        <form id="waypoint-form" class="waypoint-form">
+          <label for="waypoint-name">自定义点位名称</label>
+          <div class="waypoint-input-row">
+            <input id="waypoint-name" maxlength="40" autocomplete="off" placeholder="例如：guide_1 或 展厅入口" required>
+            <button id="mark-waypoint" type="submit" class="primary-button">标记当前位置</button>
+          </div>
+          <small>支持中文、英文、数字、下划线和短横线。同名点会先自动备份再更新。</small>
+        </form>
+        <div class="waypoint-heading"><strong>已标记点位</strong><button id="refresh-waypoints" class="text-button" type="button">刷新</button></div>
+        <div id="waypoint-list" class="waypoint-list"><p class="muted">尚未读取点位</p></div>
+      </div>
+    </section>
+
+    <section class="activity panel">
+      <div class="section-title inline"><div><span>ACTIVITY</span><h2>执行状态</h2></div><button id="clear-log" class="text-button">清空</button></div>
+      <div id="activity-log" class="activity-log"><p class="muted">尚未发送动作</p></div>
+    </section>
+  </main>
+
+  <button id="stop-button" class="emergency-stop"><span>■</span><strong>立即停止</strong></button>
+
+  <div id="token-gate" class="overlay visible">
+    <form id="token-form" class="gate-card">
+      <div class="gate-icon">G1</div>
+      <h2>连接机器人控制端</h2>
+      <p>输入 G1 本机生成的访问令牌。令牌只保存在当前浏览器。</p>
+      <input id="token-input" type="password" autocomplete="off" placeholder="访问令牌" required>
+      <button type="submit" class="primary-button">验证并进入</button>
+      <small>在 G1 终端执行：<code>cat /home/unitree/智能中控/data/web_control/access_token</code></small>
+      <p id="token-error" class="error-text"></p>
+    </form>
+  </div>
+
+  <div id="confirm-modal" class="overlay">
+    <div class="confirm-card">
+      <div class="confirm-mark">!</div>
+      <p class="eyebrow">ACTION CONFIRMATION</p>
+      <h2 id="confirm-title">确认执行</h2>
+      <p id="confirm-description"></p>
+      <div class="confirm-warning">确认 G1 周围无人、无障碍，并且当前姿态稳定。</div>
+      <div class="confirm-actions"><button id="cancel-action" class="secondary-button">取消</button><button id="confirm-action" class="primary-button danger">确认执行</button></div>
+    </div>
+  </div>
+
+  <div id="tour-confirm-modal" class="overlay">
+    <div class="confirm-card">
+      <div class="confirm-mark">→</div>
+      <p class="eyebrow">NEXT TOUR STATION</p>
+      <h2 id="tour-confirm-title">确认前往下一导览点</h2>
+      <p id="tour-confirm-description"></p>
+      <div class="confirm-warning">确认沿途无人、无临时障碍。确认后该站导航、示教动作、讲解及固定展示将由 G1 本机连续执行，即使手机短暂离开 Wi‑Fi 也不会中断。</div>
+      <div class="confirm-actions"><button id="cancel-tour" class="secondary-button">暂不前往</button><button id="confirm-tour" class="primary-button danger">确认前往</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/control.js?v=4" defer></script>
+</body>
+</html>

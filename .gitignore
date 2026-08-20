@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Runtime state and secrets
+runtime/.env
+runtime/data/smart_center.db*
+runtime/data/uploads/
+runtime/data/audio/
+runtime/data/huggingface/
+runtime/data/web_control/access_token
+runtime/data/web_control/rotate_on_restart
+runtime/data/ramp_platform_v3/*.json
+!runtime/data/ramp_platform_v3/.gitkeep
+
+# Robot-generated logs and captures
+*.log
+*.bag
+*.db3
+*.npz
+*.tmp
+*.before_*
+*.deleted_*
+
+# Read-only source audit is intentionally not published
+source/
+systemd/source-units/
+scripts-*.tmp
+bin-g1-*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

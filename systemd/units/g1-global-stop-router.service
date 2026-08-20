@@ -1,0 +1,17 @@
+[Unit]
+Description=Unitree G1 highest-priority global stop router
+After=g1-local-assistant.service
+Wants=g1-local-assistant.service
+
+[Service]
+Type=simple
+User=unitree
+WorkingDirectory=/home/unitree/智能中控
+EnvironmentFile=-/etc/default/g1-ramp-stack
+ExecStart=/usr/bin/bash /home/unitree/智能中控/scripts/start_g1_global_stop_router.sh
+Restart=always
+RestartSec=2
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

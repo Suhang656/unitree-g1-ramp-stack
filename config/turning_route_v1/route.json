@@ -1,0 +1,45 @@
+{
+  "name": "turning_route_v1",
+  "map_version": "embodied_lab_panorama_v2",
+  "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
+  "navigation": "official_unitree_slam_goto",
+  "shared_start": true,
+  "shared_end": true,
+  "start": {
+    "x": 0.024735889031391838,
+    "y": -0.08662520735348705,
+    "yaw": -0.3986063585212273
+  },
+  "turn_1": {
+    "x": 1.18586348379448,
+    "y": 1.1515916561978627,
+    "yaw_forward": -0.42751506224647967,
+    "yaw_return": -2.324076234423949
+  },
+  "turn_2": {
+    "x": 4.900046498890634,
+    "y": -0.5406526657681765,
+    "yaw_forward": -1.9875738976511825,
+    "yaw_return": 2.7140775913433135
+  },
+  "turn_3": {
+    "x": 4.275112442278064,
+    "y": -1.9522534788074815,
+    "yaw_forward": -0.4249527551699067,
+    "yaw_return": 1.1540187559386106
+  },
+  "end": {
+    "x": 14.963454714172158,
+    "y": -6.78900872898837,
+    "yaw": -0.37799739368461505
+  },
+  "transition_distance_meters": 0.3,
+  "arrival_distance_meters": 0.35,
+  "control_enabled": false,
+  "updated_at_unix": 1787103487.450927,
+  "previous_start": {
+    "x": -0.7782594124163063,
+    "y": 0.42958332566340995,
+    "yaw": -0.3917893228866826
+  }
+}

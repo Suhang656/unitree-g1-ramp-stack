@@ -1,0 +1,17 @@
+# Installed as /etc/default/g1-ramp-stack
+G1_PROJECT_DIR=/home/unitree/智能中控
+G1_NETWORK_INTERFACE=enP8p1s0
+G1_CONTROL_IP=192.168.123.161
+UNITREE_SDK2_PYTHON_PATH=/home/unitree/unitree_sdk2_python
+CYCLONEDDS_COMPAT_PREFIX=/home/unitree/cyclonedds-prefix
+UNITREE_ROS2_SETUP=/home/unitree/unitree_ros2/cyclonedds_ws/install/setup.bash
+G1_INTERNAL_MAP_PATH=/home/unitree/g1_internal_panorama_v2.pcd
+# 完成官方 initialize 验证后改为 1；地图可能位于内部控制单元，NX 上未必可见。
+G1_INTERNAL_MAP_VERIFIED=0
+G1_FIXED_START_X=0.024735889031391838
+G1_FIXED_START_Y=-0.08662520735348705
+G1_FIXED_START_YAW=-0.3986063585212273
+G1_LOCALIZATION_RETRY_SECONDS=2
+G1_SLAM_RESET_WAIT_SECONDS=3
+G1_WEB_PORT=8088
+G1_VOICE_VOLUME=90

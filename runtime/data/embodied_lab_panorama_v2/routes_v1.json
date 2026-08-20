@@ -1,0 +1,114 @@
+{
+  "version": "embodied_lab_panorama_v2_routes_v1",
+  "created_at_unix": 1787043598.1315658,
+  "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
+  "coordinate_frame": "map",
+  "control_enabled": false,
+  "points": {
+    "ramp_start": {
+      "x": 0.024735889031391838,
+      "y": -0.08662520735348705,
+      "yaw": -0.3986063585212273,
+      "yaw_degrees": -22.838462030344882,
+      "position_spread_meters": 0.005309533756340157,
+      "source": "/home/unitree/智能中控/data/embodied_lab_panorama_v2/ramp_start.json",
+      "alias_source": "straight_begin",
+      "role": "shared_route_start"
+    },
+    "straight_end": {
+      "x": 14.963454714172158,
+      "y": -6.78900872898837,
+      "yaw": -0.37799739368461505,
+      "yaw_degrees": -21.65765532507348,
+      "position_spread_meters": 0.006230984510039126,
+      "source": "/home/unitree/智能中控/data/embodied_lab_panorama_v2/straight_end.json",
+      "role": "shared_route_endpoint"
+    },
+    "turn_1": {
+      "x": 1.18586348379448,
+      "y": 1.1515916561978627,
+      "yaw": -0.3651415685027259,
+      "yaw_degrees": -20.921070799993227,
+      "position_spread_meters": 0.006761125795250236,
+      "source": "/home/unitree/智能中控/data/embodied_lab_panorama_v2/turn_1.json"
+    },
+    "turn_2": {
+      "x": 4.900046498890634,
+      "y": -0.5406526657681765,
+      "yaw": -1.846993124065595,
+      "yaw_degrees": -105.82491079864144,
+      "position_spread_meters": 0.007591416894709836,
+      "source": "/home/unitree/智能中控/data/embodied_lab_panorama_v2/turn_2.json"
+    },
+    "turn_3": {
+      "x": 4.275112442278064,
+      "y": -1.9522534788074815,
+      "yaw": -0.421499968000555,
+      "yaw_degrees": -24.150169231331056,
+      "position_spread_meters": 0.006716421406817933,
+      "source": "/home/unitree/智能中控/data/embodied_lab_panorama_v2/turn_3.json"
+    },
+    "turning_end": {
+      "x": 15.026144807300962,
+      "y": -6.791817461742168,
+      "yaw": -0.34756247599647877,
+      "yaw_degrees": -19.913862991715217,
+      "position_spread_meters": 0.008893599680334307,
+      "source": "/home/unitree/智能中控/data/embodied_lab_panorama_v2/turning_end.json",
+      "role": "inactive_reference_only"
+    }
+  },
+  "routes": {
+    "straight_forward": {
+      "command": "直线前进",
+      "points": [
+        "ramp_start",
+        "straight_end"
+      ]
+    },
+    "straight_return": {
+      "command": "直线返回",
+      "points": [
+        "straight_end",
+        "ramp_start"
+      ],
+      "reverse_route": true
+    },
+    "turning_forward": {
+      "command": "转弯前进",
+      "points": [
+        "ramp_start",
+        "turn_1",
+        "turn_2",
+        "turn_3",
+        "straight_end"
+      ]
+    },
+    "turning_return": {
+      "command": "转弯返回",
+      "points": [
+        "straight_end",
+        "turn_3",
+        "turn_2",
+        "turn_1",
+        "ramp_start"
+      ],
+      "reverse_route": true
+    }
+  },
+  "notes": "直线与转弯路线共用新的straight_begin起点，运行时兼容名称保持为ramp_start；共同终点仍为straight_end。",
+  "shared_start": "ramp_start",
+  "shared_end": "straight_end",
+  "unused_points": [
+    "turning_end"
+  ],
+  "updated_at_unix": 1787103231.1457713,
+  "previous_shared_start": {
+    "x": -0.7782594124163063,
+    "y": 0.42958332566340995,
+    "yaw": -0.3917893228866826,
+    "yaw_degrees": -22.447874659695184,
+    "position_spread_meters": 0.014778974304836923,
+    "source": "/home/unitree/智能中控/data/embodied_lab_panorama_v2/ramp_start.json"
+  }
+}

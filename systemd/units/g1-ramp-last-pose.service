@@ -1,0 +1,18 @@
+[Unit]
+Description=Unitree G1 last trusted localization pose recorder
+After=g1-ramp-v3-bootstrap.service
+Wants=g1-ramp-v3-bootstrap.service
+
+[Service]
+Type=simple
+User=unitree
+WorkingDirectory=/home/unitree/智能中控
+EnvironmentFile=-/etc/default/g1-ramp-stack
+ExecStart=/usr/bin/bash /home/unitree/智能中控/scripts/start_g1_last_pose_recorder.sh
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

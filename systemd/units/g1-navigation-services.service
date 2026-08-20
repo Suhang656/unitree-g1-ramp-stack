@@ -1,0 +1,19 @@
+[Unit]
+Description=Enable Unitree G1 lidar and SLAM services
+Wants=network-online.target
+After=network-online.target
+Before=g1-ramp-v3-bootstrap.service g1-local-assistant.service
+
+[Service]
+Type=oneshot
+User=unitree
+WorkingDirectory=/home/unitree/智能中控
+EnvironmentFile=-/etc/default/g1-ramp-stack
+ExecStart=/usr/bin/bash /home/unitree/智能中控/scripts/start_g1_navigation_services.sh
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=180
+
+[Install]
+WantedBy=multi-user.target

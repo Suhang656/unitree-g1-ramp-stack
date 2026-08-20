@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "name": "guide_1",
+  "samples": 50,
+  "x": 0.5070715683765017,
+  "y": 2.805306915095686,
+  "yaw": -1.6954765954283597,
+  "yaw_degrees": -97.14365318125478,
+  "position_spread_meters": 0.007080278914601634,
+  "created_at_unix": 1787108301.5480108,
+  "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
+  "localization_pose": {
+    "x": 0.025413871457099106,
+    "y": -0.08460703967861366,
+    "yaw": -0.3925644367614974
+  },
+  "source": "g1_web_control"
+}

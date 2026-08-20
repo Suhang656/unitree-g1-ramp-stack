@@ -1,0 +1,24 @@
+{
+  "output": "/home/unitree/g1_embodied_lab_panorama_v2_nx.pcd",
+  "updated_at_unix": 1787039296.312966,
+  "final": true,
+  "topic": "/unitree/slam_mapping/points",
+  "frame_id": "map",
+  "voxel_size_m": 0.06,
+  "point_count": 627082,
+  "frame_count": 3075,
+  "raw_point_count": 3258929,
+  "valid_point_count": 3258929,
+  "bounds": {
+    "minimum_xyz": [
+      -41.41700744628906,
+      -38.61919021606445,
+      -3.4100470542907715
+    ],
+    "maximum_xyz": [
+      36.8746337890625,
+      47.81549072265625,
+      6.763717174530029
+    ]
+  }
+}

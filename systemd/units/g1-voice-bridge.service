@@ -1,0 +1,20 @@
+[Unit]
+Description=Unitree G1 built-in microphone voice bridge
+After=network.target
+Before=g1-navigation-services.service g1-ramp-v3-bootstrap.service g1-local-assistant.service
+
+[Service]
+Type=simple
+User=unitree
+WorkingDirectory=/home/unitree/智能中控
+EnvironmentFile=-/etc/default/g1-ramp-stack
+EnvironmentFile=-/home/unitree/智能中控/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/bash /home/unitree/智能中控/scripts/start_g1_voice_bridge.sh
+Restart=always
+RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

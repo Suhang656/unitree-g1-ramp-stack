@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "name": "guide_2",
+  "samples": 50,
+  "x": -12.303403071626196,
+  "y": 6.123590267812479,
+  "yaw": 2.1975392680207873,
+  "yaw_degrees": 125.90972537185935,
+  "position_spread_meters": 0.009116704938187533,
+  "created_at_unix": 1787189777.2055485,
+  "boot_id": "5d8a5807-cfe9-4552-be20-bbfd43fd3bf9",
+  "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
+  "localization_pose": {
+    "x": -0.6834731364229125,
+    "y": 0.18680987489547707,
+    "yaw": -0.7626676700778248
+  },
+  "localization_created_at_unix": 1787188300.1581774,
+  "source": "g1_web_control"
+}

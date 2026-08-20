@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
+  "order": [
+    "guide_2",
+    "guide_3",
+    "guide_1"
+  ],
+  "stations": {
+    "guide_2": {
+      "display_name": "灵巧手介绍",
+      "speech": "这里是已经配备灵巧手的机器人，现在能完美实现抓放枕头的操作"
+    },
+    "guide_3": {
+      "display_name": "遥控展示",
+      "speech": "这些机器人有内置动作，可以遥控操作，各位感兴趣的话可以尝试"
+    },
+    "guide_1": {
+      "display_name": "坡道行走展示",
+      "speech": "欢迎来到具身智能实验场地。下面我将展示爬坡行走"
+    }
+  },
+  "updated_at_unix": 1787191788.7918222
+}
