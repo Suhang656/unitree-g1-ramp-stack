@@ -21,10 +21,48 @@ ip route get 192.168.123.161
 
 两台 G1 出厂镜像可能有相同 hostname，必须用 `machine-id` 和无线 MAC 区分。
 
-## 1. 获取仓库与只读检查
+## 1. 获取私有仓库与只读检查
+
+推荐在已经登录 GitHub 的管理电脑上克隆，再复制到 G1。这样不需要在机器人上保存 GitHub 账户凭据：
 
 ```bash
-git clone <GitHub仓库地址> /home/unitree/unitree-g1-ramp-stack
+git clone git@github.com:Suhang656/unitree-g1-ramp-stack.git
+scp -r unitree-g1-ramp-stack \
+  unitree@<G1无线IP>:/home/unitree/
+```
+
+也可以为目标 G1 创建本仓库专用的只读 Deploy Key：
+
+```bash
+ssh-keygen -t ed25519 \
+  -f ~/.ssh/unitree_g1_ramp_deploy \
+  -N ''
+cat ~/.ssh/unitree_g1_ramp_deploy.pub
+```
+
+把公钥添加到 GitHub 仓库的 `Settings → Deploy keys`，不要勾选写权限。随后配置只使用该密钥：
+
+```bash
+cat >>~/.ssh/config <<'EOF'
+Host github-g1-ramp
+  HostName ssh.github.com
+  Port 443
+  User git
+  IdentityFile ~/.ssh/unitree_g1_ramp_deploy
+  IdentitiesOnly yes
+EOF
+chmod 600 ~/.ssh/config
+
+git clone \
+  git@github-g1-ramp:Suhang656/unitree-g1-ramp-stack.git \
+  /home/unitree/unitree-g1-ramp-stack
+```
+
+不要把私钥、GitHub Token 或 `~/.ssh` 复制进项目目录。
+
+复制完成后，在目标 G1 执行只读检查：
+
+```bash
 cd /home/unitree/unitree-g1-ramp-stack
 
 G1_NETWORK_INTERFACE=enP8p1s0 \
