@@ -21,7 +21,7 @@ Unitree 官方 SLAM RPC / G1 高层 Loco、Arm API
 1. `g1-voice-bridge`：语音桥先启动；
 2. `g1-navigation-services`：开启 `lidar_driver` 与 `unitree_slam`；
 3. `g1-ramp-odom-cache`：建立可靠位置缓存；
-4. `g1-ramp-v3-bootstrap`：固定起点候选循环定位，成功后生成本次开机许可；
+4. `g1-ramp-v3-bootstrap`：围绕人工固定起点循环定位，优先使用本机同地图的安全微调，成功后生成本次开机许可；
 5. `g1-local-assistant`：启动智能中控节点与唯一运动桥；
 6. 全局停止、网页、导览和可信姿态服务。
 
@@ -32,6 +32,7 @@ Unitree 官方 SLAM RPC / G1 高层 Loco、Arm API
 - 路线点：`data/embodied_lab_panorama_v2/*.json`
 - 导览配置：`data/embodied_lab_panorama_v2/tour_config.json`
 - 当前开机许可：`data/ramp_platform_v3/localization_ready.json`（不入 Git）
+- 本机开机起点微调：`data/ramp_platform_v3/boot_start_adjustment.json`（不入 Git、禁止跨设备复制）
 - 网页 Token：`data/web_control/access_token`（不入 Git）
 - 里程计缓存：`/run/g1-ramp/odom.json`
 

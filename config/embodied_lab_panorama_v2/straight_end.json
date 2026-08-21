@@ -11,7 +11,6 @@
   "map_version": "embodied_lab_panorama_v2",
   "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
   "coordinate_frame": "map",
-  "boot_id": "32367efd-33a8-4487-976e-4fdbb209df97",
   "saved_at_unix": 1787043076.6786597,
   "source": "/unitree/slam_relocation/odom"
 }

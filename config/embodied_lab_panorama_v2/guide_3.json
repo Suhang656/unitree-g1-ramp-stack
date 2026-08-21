@@ -8,7 +8,6 @@
   "yaw_degrees": 144.26299363826212,
   "position_spread_meters": 0.010164966641319774,
   "created_at_unix": 1787191774.375571,
-  "boot_id": "d27f3691-92d6-4521-8919-5f54e67aaaaf",
   "map_path": "/home/unitree/g1_internal_panorama_v2.pcd",
   "localization_pose": {
     "x": 0.5080679012951734,

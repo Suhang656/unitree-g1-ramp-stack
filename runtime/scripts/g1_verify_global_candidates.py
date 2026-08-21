@@ -14,6 +14,13 @@ import rclpy
 from nav_msgs.msg import Odometry
 from rclpy.qos import qos_profile_sensor_data
 
+from g1_boot_start_adjustment import (
+    build_candidates,
+    load_adjustment,
+    pose_is_plausible,
+    save_adjustment,
+)
+
 
 PROJECT = Path(os.environ.get("G1_PROJECT_DIR", "/home/unitree/智能中控"))
 
@@ -509,8 +516,8 @@ print(
 # 终点、转弯点、路线中点、全图其它点全部不参与本次开机验证。
 import math as _g1_start_only_math
 
-_start_x = 0.024735889031391838
-_start_y = -0.08662520735348705
+_start_x = float(os.environ.get("G1_FIXED_START_X", "0.024735889031391838"))
+_start_y = float(os.environ.get("G1_FIXED_START_Y", "-0.08662520735348705"))
 _start_radius_m = 3.0
 
 def _g1_candidate_xy(candidate):
@@ -642,10 +649,9 @@ print(
 )
 
 
-# FIXED_START_FAST_BOOT_V5
-# FIXED_START_36_CANDIDATES_V2
-# 仅搜索固定起点0.5米以内。
-# 6个位置 × 6个面向终点附近朝向 = 36个候选。
+# 固定起点自调整：优先尝试本机上次成功开机定位得到的微调姿态，
+# 再尝试人工配置的基准姿态和其周边候选。微调结果绑定地图并受到
+# 固定起点位置/朝向阈值约束，不会读取或依赖其它G1。
 if os.environ.get(
     "G1_FIXED_START_FAST_BOOT",
     "0",
@@ -669,60 +675,59 @@ if os.environ.get(
         )
     )
 
-    # 新地图固定坡道起点。
-    # 第一项是人工采集姿态，第二项是官方SLAM
-    # 优化后的历史姿态，其余为12厘米小范围候选。
-    fixed_positions = (
-        (start_x, start_y),
-        (start_x + 0.08, start_y + 0.08),
-        (start_x + 0.12, start_y),
-        (start_x - 0.12, start_y),
-        (start_x, start_y + 0.12),
-        (start_x, start_y - 0.12),
+    canonical_start = (start_x, start_y, base_yaw)
+    auto_adjust_enabled = os.environ.get(
+        "G1_BOOT_AUTO_ADJUST", "1"
+    ) == "1"
+    search_radius = float(
+        os.environ.get("G1_BOOT_SEARCH_RADIUS_M", "0.50")
     )
-
-    # 所有候选均保持在新共同起点附近，
-    # 不再使用旧地图优化姿态。
-    yaw_candidates = (
-        ("base", base_yaw),
-        ("m05", base_yaw + math.radians(-5.0)),
-        ("p05", base_yaw + math.radians(5.0)),
-        ("m10", base_yaw + math.radians(-10.0)),
-        ("p10", base_yaw + math.radians(10.0)),
-        ("m15", base_yaw + math.radians(-15.0)),
+    yaw_acceptance = math.radians(
+        float(os.environ.get("G1_BOOT_ACCEPT_MAX_YAW_ERROR_DEG", "35"))
     )
+    adjustment_path = (
+        PROJECT
+        / "data/ramp_platform_v3"
+        / "boot_start_adjustment.json"
+    )
+    adjusted_start = None
 
-    unique = []
-
-    for position_index, position in enumerate(
-        fixed_positions,
-        1,
-    ):
-        distance = math.hypot(
-            position[0] - start_x,
-            position[1] - start_y,
+    if auto_adjust_enabled:
+        adjusted_start = load_adjustment(
+            adjustment_path,
+            args.map,
+            canonical_start,
+            search_radius,
+            yaw_acceptance,
         )
-
-        if distance > 0.5:
-            continue
-
-        for yaw_name, candidate_yaw in yaw_candidates:
-            unique.append(
-                {
-                    "name": (
-                        f"fixed_start_"
-                        f"p{position_index:02d}_"
-                        f"yaw_{yaw_name}"
-                    ),
-                    "x": float(position[0]),
-                    "y": float(position[1]),
-                    "yaw": float(candidate_yaw),
-                    "distance_to_start": distance,
-                }
+        if adjusted_start is not None:
+            print(
+                "已载入本机开机起点修正：",
+                *(round(value, 4) for value in adjusted_start),
             )
+        elif adjustment_path.exists():
+            print("已有起点修正与当前地图/阈值不匹配，忽略")
+
+    unique = build_candidates(
+        canonical_start,
+        adjusted_pose=adjusted_start,
+        search_radius=search_radius,
+        position_step=float(
+            os.environ.get("G1_BOOT_POSITION_STEP_M", "0.12")
+        ),
+        yaw_window_degrees=float(
+            os.environ.get("G1_BOOT_YAW_WINDOW_DEG", "15")
+        ),
+        yaw_step_degrees=float(
+            os.environ.get("G1_BOOT_YAW_STEP_DEG", "5")
+        ),
+        maximum_candidates=int(
+            os.environ.get("G1_BOOT_MAX_CANDIDATES", "36")
+        ),
+    )
 
     print(
-        "固定起点36候选验证顺序：",
+        "固定起点自调整候选验证顺序：",
         [
             (
                 item["name"],
@@ -977,6 +982,46 @@ try:
             )
             continue
 
+        if os.environ.get("G1_FIXED_START_FAST_BOOT", "0") == "1":
+            canonical_start = (
+                float(
+                    os.environ.get(
+                        "G1_FIXED_START_X", "0.024735889031391838"
+                    )
+                ),
+                float(
+                    os.environ.get(
+                        "G1_FIXED_START_Y", "-0.08662520735348705"
+                    )
+                ),
+                float(
+                    os.environ.get(
+                        "G1_FIXED_START_YAW", "-0.3986063585212273"
+                    )
+                ),
+            )
+            plausible = pose_is_plausible(
+                first,
+                canonical_start,
+                float(
+                    os.environ.get(
+                        "G1_BOOT_ACCEPT_MAX_POSITION_ERROR_M", "0.75"
+                    )
+                ),
+                math.radians(
+                    float(
+                        os.environ.get(
+                            "G1_BOOT_ACCEPT_MAX_YAW_ERROR_DEG", "35"
+                        )
+                    )
+                ),
+            )
+            if not plausible:
+                print(
+                    "优化姿态虽稳定，但偏离人工固定起点安全范围，拒绝"
+                )
+                continue
+
         accepted = {
             "success": True,
             "boot_id": Path(
@@ -1024,6 +1069,35 @@ if accepted is None:
     print()
     print("所有候选均未通过官方重复定位验证")
     raise SystemExit(1)
+
+if (
+    os.environ.get("G1_FIXED_START_FAST_BOOT", "0") == "1"
+    and os.environ.get("G1_BOOT_AUTO_ADJUST", "1") == "1"
+):
+    canonical_start = (
+        float(
+            os.environ.get(
+                "G1_FIXED_START_X", "0.024735889031391838"
+            )
+        ),
+        float(
+            os.environ.get(
+                "G1_FIXED_START_Y", "-0.08662520735348705"
+            )
+        ),
+        float(
+            os.environ.get(
+                "G1_FIXED_START_YAW", "-0.3986063585212273"
+            )
+        ),
+    )
+    save_adjustment(
+        PROJECT / "data/ramp_platform_v3/boot_start_adjustment.json",
+        args.map,
+        canonical_start,
+        accepted,
+    )
+    print("已更新本机开机起点自调整记录")
 
 temporary = ready_path.with_suffix(".tmp")
 

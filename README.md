@@ -5,7 +5,7 @@
 - G1 内置麦克风唤醒、ASR 文本接入和机身扬声器 TTS；
 - “直线前进 / 直线返回 / 转弯前进 / 转弯返回 / 停止”确定性语音路由；
 - Unitree 官方雷达、SLAM 定位和 `goto` 导航链路；
-- 固定起点短周期重复定位，成功后播报“全局定位成功”；
+- 固定起点短周期重复定位、本机起点微调学习，成功后播报“全局定位成功”；
 - Token 保护的网页控制、路线按钮、点位采集和导览编辑；
 - 三点导览、Please 示教动作、讲解文本与坡道演示编排；
 - 全局停止路由、实时里程计缓存、可信姿态保存和命令行工具。
@@ -18,6 +18,7 @@
 4. 路线坐标只对生成它的地图坐标系有效。换地图、地图原点或场地后必须重新标点。
 5. 官方 `goto` 在部分固件上会把 FSM 切到 501。项目自身不主动请求“越障模式”，但不能承诺官方导航不改变底层 FSM。
 6. 首次现场验收必须有保护架/防跌倒措施、遥控急停人员和净空区域。
+7. 每台 G1 独立建图、标点和学习开机修正；部署和运行都不需要连接源 G1。
 
 ## 仓库结构
 
@@ -33,10 +34,13 @@ docs/          架构、地图迁移、安全验收和完整部署手册
 
 ## 新 G1 快速部署
 
-先完整阅读 [新 G1 部署手册](docs/DEPLOY_NEW_G1.md) 和 [地图迁移说明](docs/MAP_MIGRATION.md)。摘要如下：
+仓库公开地址：<https://github.com/Suhang656/unitree-g1-ramp-stack>。
+
+先完整阅读 [新 G1 部署手册](docs/DEPLOY_NEW_G1.md)、[地图迁移说明](docs/MAP_MIGRATION.md)、[测试小地图切换全景地图](docs/TEST_MAP_TO_PANORAMA.md)、[开机定位说明](docs/BOOT_LOCALIZATION.md) 和 [安全验收](docs/SAFETY_ACCEPTANCE.md)。摘要如下：
 
 ```bash
-git clone <本仓库地址> /home/unitree/unitree-g1-ramp-stack
+git clone https://github.com/Suhang656/unitree-g1-ramp-stack.git \
+  /home/unitree/unitree-g1-ramp-stack
 cd /home/unitree/unitree-g1-ramp-stack
 
 G1_NETWORK_INTERFACE=enP8p1s0 \
@@ -96,6 +100,7 @@ cat /home/unitree/智能中控/data/web_control/access_token
 - 安装脚本不启用服务、不启动机器人、不发布动作命令；
 - 地图未人工确认时，激活脚本拒绝继续；
 - 定位许可绑定当前 `boot_id` 和地图路径；
+- 开机点位自调整记录绑定本机地图，并受人工起点位置/朝向双重阈值约束；
 - 点位采集要求本次开机定位有效，并检查静止采样波动；
 - 网页写操作要求随机 Token；
 - 全局停止路由独立运行；
@@ -103,4 +108,4 @@ cat /home/unitree/智能中控/data/web_control/access_token
 
 ## 来源与验证状态
 
-整理基线来自源 G1 `10.0.24.208` 的实际运行项目。代码、路线、服务关系和地图行为已经做过只读审计；仓库不会包含源机 Token、数据库、日志、开机许可或 Wi-Fi 密码。详见 [源项目审计](docs/SOURCE_AUDIT.md)。
+整理基线来自一套已经现场运行的 G1 项目。代码、路线、服务关系和地图行为已经做过只读审计；仓库不会包含设备 IP、Token、数据库、日志、开机许可、开机微调记录或 Wi-Fi 密码。新 G1 不需要连接原设备。详见 [现场基线审计](docs/SOURCE_AUDIT.md) 和 [故障排查](docs/TROUBLESHOOTING.md)。
