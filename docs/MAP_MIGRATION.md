@@ -5,7 +5,9 @@
 - **NX 参考点云**：由 ROS 话题 `/unitree/slam_mapping/points` 本地记录，可查看、备份和比较；本仓库附带一份参考 PCD。
 - **官方内部导航地图**：由 `slam_operate` 的 `stop-map <address>` 保存，并由 `initialize -- <address> x y yaw` 加载。`address` 可能位于内部控制单元，NX 的 `find/ls` 未必能看到。
 
-普通 NX PCD 在源机曾返回 `507 Load pcd failed`，因此复制参考 PCD不能视为完成迁移。
+普通 NX PCD 在现场测试中曾返回 `507 Load pcd failed`，因此复制参考 PCD不能视为完成迁移。
+
+每台 G1 独立执行本流程。源 G1 和新 G1 不需要互联，也不要把两台机器同时放入同一 DDS 运动控制域。
 
 ## 推荐方案：目标 G1 重建官方地图
 
@@ -83,8 +85,14 @@ timeout 60s /usr/bin/python3 -u "$PROJECT/scripts/g1_slam_cli.py" "$G1_IF" initi
 G1_INTERNAL_MAP_VERIFIED=1
 ```
 
+首次成功 `initialize` 后还没有本次开机许可是正常现象。请按 [全新 G1 部署手册的固定起点章节](DEPLOY_NEW_G1.md#5-首次初始化与固定起点采集)直接采集人工起点；不要复制或伪造另一台机器的许可文件。
+
 ## 源地图直接复制的条件
 
 只有在 Unitree 官方提供内部地图导出/导入方法、并在目标控制单元完成导入后，才可复用源地图。仓库中的参考点云先用 `bash maps/assemble_reference_map.sh` 重组；仅把重组得到的 `*_nx_reference.pcd` 复制到 NX，仍不满足官方内部地图导入条件。
 
 即便同一张地图复制成功，不同机器雷达外参、固件和初始姿态也要重新验收；路线坐标可作为候选，但不能跳过逐点验证。
+
+## 当前只有测试小地图时
+
+可以先用小地图验证软件链路，但后续全景建图会产生新的坐标系，所有路线点和导览点都必须重新采集。完整的停服务、建图、保存、加载、首次起点采样、清理旧状态和逐级验收命令见 [TEST_MAP_TO_PANORAMA.md](TEST_MAP_TO_PANORAMA.md)。

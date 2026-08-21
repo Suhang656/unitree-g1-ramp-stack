@@ -18,6 +18,12 @@ ANNOUNCER="$PROJECT/scripts/g1_announce_localization_ready.py"
 RETRY_SECONDS="${G1_LOCALIZATION_RETRY_SECONDS:-2}"
 SLAM_RESET_WAIT_SECONDS="${G1_SLAM_RESET_WAIT_SECONDS:-3}"
 
+if [[ "${G1_INTERNAL_MAP_VERIFIED:-0}" != "1" ]]
+then
+    echo "官方内部地图尚未通过initialize验收：G1_INTERNAL_MAP_VERIFIED != 1" >&2
+    exit 1
+fi
+
 mkdir -p "$DATA"
 
 # 每次开机重新生成许可。

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+CONFIG=/etc/default/g1-ramp-stack
+
 echo "===== 服务 ====="
 for s in g1-voice-bridge g1-navigation-services g1-ramp-odom-cache g1-ramp-v3-bootstrap g1-local-assistant g1-global-stop-router g1-web-control g1-tour-executor g1-ramp-last-pose; do
   printf '%-34s ' "$s"
@@ -12,6 +14,19 @@ pgrep -af 'g1_motion_bridge.py|g1_voice_bridge.py|g1_web_control.py|g1_tour_exec
 
 echo "===== 当前开机定位许可 ====="
 g1-ramp status
+
+echo "===== 开机起点自调整 ====="
+if [[ -r "$CONFIG" ]]; then
+  # 只输出非敏感定位参数。
+  grep -E \
+    '^(G1_INTERNAL_MAP_PATH|G1_INTERNAL_MAP_VERIFIED|G1_FIXED_START_[XY]|G1_FIXED_START_YAW|G1_BOOT_)=' \
+    "$CONFIG" || true
+fi
+if [[ -s /home/unitree/智能中控/data/ramp_platform_v3/boot_start_adjustment.json ]]; then
+  echo "本机同地图微调记录：已生成"
+else
+  echo "本机同地图微调记录：尚未生成（首次成功定位后生成）"
+fi
 
 echo "===== Web Token ====="
 if [[ -r /home/unitree/智能中控/data/web_control/access_token ]]; then

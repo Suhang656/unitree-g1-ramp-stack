@@ -1,6 +1,6 @@
-# 源 G1 只读审计结论
+# 现场基线只读审计结论
 
-审计对象：源 G1 `10.0.24.208`，项目 `/home/unitree/智能中控`。审计期间没有修改服务、没有发布 ROS 运动请求、没有调用机器人运动 API。
+发布包整理自一套已经现场运行的 G1 项目。审计期间没有修改服务、没有发布 ROS 运动请求、没有调用机器人运动 API。设备 IP、机器身份和网络凭据不属于通用项目，也不在仓库中公开。
 
 ## 纳入通用项目
 
@@ -18,7 +18,7 @@
 - 网页访问 Token、Wi-Fi 密码、SSH 密钥、开机定位许可；
 - 大体积且与爬坡无关的 ASR、RAG、Torch/Transformers vendor 依赖；
 - 大量 `.before_*`、备份目录和失效实验脚本；
-- 源机器 systemd 的禁用/备份 drop-in。
+- 基线机器 systemd 的禁用/备份 drop-in。
 
 ## 地图结论
 
@@ -28,7 +28,7 @@ NX 参考 PCD 的 SHA-256：
 ca085ee9796feb252521228b1e3fb375985cee87c1a2a2fc46116cecfa8c05c3
 ```
 
-源配置使用 `/home/unitree/g1_internal_panorama_v2.pcd`，但该文件在 NX 文件系统不可见，官方 `initialize` 却可以接受它。这说明该地址由官方 SLAM 服务解释，可能对应内部控制单元。普通 NX PCD 曾返回 `errorCode 507 Load pcd failed`，因此发布包不会把参考 PCD冒充为可直接导航的官方地图。
+现场配置使用 `/home/unitree/g1_internal_panorama_v2.pcd`，但该文件在 NX 文件系统不可见，官方 `initialize` 却可以接受它。这说明该地址由官方 SLAM 服务解释，可能对应内部控制单元。普通 NX PCD 曾返回 `errorCode 507 Load pcd failed`，因此发布包不会把参考 PCD冒充为可直接导航的官方地图。
 
 ## 固件行为
 

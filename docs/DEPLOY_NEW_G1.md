@@ -8,7 +8,7 @@
 - 内部网卡能访问 `192.168.123.161`；
 - 首次部署时机器人断开路线执行权限，放在平地并站直；
 - 操作员持遥控器并可立即急停；
-- 不把源 G1 和目标 G1 同时接入同一 DDS 网段进行运动测试。
+- 新 G1 的部署、建图、定位和运行均独立完成；原设备保持关机或网络隔离，不建立 SSH、DDS 或项目服务连接。
 
 记录目标机：
 
@@ -21,44 +21,23 @@ ip route get 192.168.123.161
 
 两台 G1 出厂镜像可能有相同 hostname，必须用 `machine-id` 和无线 MAC 区分。
 
-## 1. 获取私有仓库与只读检查
+## 1. 获取公开仓库与只读检查
 
-推荐在已经登录 GitHub 的管理电脑上克隆，再复制到 G1。这样不需要在机器人上保存 GitHub 账户凭据：
-
-```bash
-git clone git@github.com:Suhang656/unitree-g1-ramp-stack.git
-scp -r unitree-g1-ramp-stack \
-  unitree@<G1无线IP>:/home/unitree/
-```
-
-也可以为目标 G1 创建本仓库专用的只读 Deploy Key：
+新 G1 可直接克隆公开仓库，不需要 GitHub Token、Deploy Key，也不需要连接源 G1：
 
 ```bash
-ssh-keygen -t ed25519 \
-  -f ~/.ssh/unitree_g1_ramp_deploy \
-  -N ''
-cat ~/.ssh/unitree_g1_ramp_deploy.pub
-```
-
-把公钥添加到 GitHub 仓库的 `Settings → Deploy keys`，不要勾选写权限。随后配置只使用该密钥：
-
-```bash
-cat >>~/.ssh/config <<'EOF'
-Host github-g1-ramp
-  HostName ssh.github.com
-  Port 443
-  User git
-  IdentityFile ~/.ssh/unitree_g1_ramp_deploy
-  IdentitiesOnly yes
-EOF
-chmod 600 ~/.ssh/config
-
-git clone \
-  git@github-g1-ramp:Suhang656/unitree-g1-ramp-stack.git \
+git clone https://github.com/Suhang656/unitree-g1-ramp-stack.git \
   /home/unitree/unitree-g1-ramp-stack
 ```
 
-不要把私钥、GitHub Token 或 `~/.ssh` 复制进项目目录。
+如果 G1 无法访问 GitHub，可在管理电脑下载后用 SCP 单向复制发布包：
+
+```bash
+git clone https://github.com/Suhang656/unitree-g1-ramp-stack.git
+scp -r unitree-g1-ramp-stack unitree@<新G1无线IP>:/home/unitree/
+```
+
+不要复制源 G1 的整个 `/home/unitree`、运行状态、SSH 密钥或 Wi-Fi 配置。
 
 复制完成后，在目标 G1 执行只读检查：
 
@@ -110,9 +89,13 @@ CYCLONEDDS_COMPAT_PREFIX=/home/unitree/cyclonedds-prefix
 UNITREE_ROS2_SETUP=/home/unitree/unitree_ros2/cyclonedds_ws/install/setup.bash
 G1_INTERNAL_MAP_PATH=/home/unitree/g1_internal_panorama_v2.pcd
 G1_INTERNAL_MAP_VERIFIED=0
+G1_BOOT_AUTO_ADJUST=1
+G1_BOOT_SEARCH_RADIUS_M=0.50
+G1_BOOT_ACCEPT_MAX_POSITION_ERROR_M=0.50
+G1_BOOT_ACCEPT_MAX_YAW_ERROR_DEG=35
 ```
 
-此时保持 `G1_INTERNAL_MAP_VERIFIED=0`。
+此时保持 `G1_INTERNAL_MAP_VERIFIED=0`。自调整参数的含义和安全边界见 [BOOT_LOCALIZATION.md](BOOT_LOCALIZATION.md)。
 
 ## 4. 准备目标 G1 的官方地图
 
@@ -124,16 +107,44 @@ G1_INTERNAL_MAP_VERIFIED=0
 sudo sed -i 's/^G1_INTERNAL_MAP_VERIFIED=.*/G1_INTERNAL_MAP_VERIFIED=1/' /etc/default/g1-ramp-stack
 ```
 
-## 5. 采集目标机固定起点
+## 5. 首次初始化与固定起点采集
 
 先手动启动导航服务和初始化定位，不启动运动桥。G1 在坡道起点站直、朝向终点：
 
 ```bash
+sudo systemctl stop \
+  g1-local-assistant.service \
+  g1-web-control.service \
+  g1-tour-executor.service \
+  g1-ramp-v3-bootstrap.service 2>/dev/null || true
 sudo systemctl start g1-navigation-services.service
-g1-map-point mark straight_begin
 ```
 
-将输出 JSON 的 `x/y/yaw` 写入 `/etc/default/g1-ramp-stack` 的 `G1_FIXED_START_X/Y/YAW`。注意：`g1-map-point` 要求已经有本次开机定位许可；首次建站可直接用 `capture_turning_waypoint.py` 采样，或在官方 initialize 成功后生成临时许可，详见地图文档。
+按 [MAP_MIGRATION.md](MAP_MIGRATION.md) 让官方 `initialize` 成功。首次建站此时还没有正式开机许可，`g1-map-point mark` 会拒绝，这是正确的安全行为。直接从稳定的官方重定位里程计采集人工起点：
+
+```bash
+unset PYTHONPATH PYTHONHOME AMENT_PREFIX_PATH CMAKE_PREFIX_PATH COLCON_PREFIX_PATH CYCLONEDDS_HOME CYCLONEDDS_URI
+source /opt/ros/humble/setup.bash
+source /home/unitree/unitree_ros2/cyclonedds_ws/install/setup.bash
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=0 ROS2CLI_DISABLE_DAEMON=1
+export CYCLONEDDS_URI='<CycloneDDS><Domain Id="any"><General><Interfaces><NetworkInterface name="enP8p1s0"/></Interfaces></General></Domain></CycloneDDS>'
+
+cd /home/unitree/智能中控
+/usr/bin/python3 -u scripts/capture_turning_waypoint.py \
+  data/embodied_lab_panorama_v2/straight_begin.json
+```
+
+将 JSON 的 `x/y/yaw` 写入 `/etc/default/g1-ramp-stack` 的 `G1_FIXED_START_X/Y/YAW`，并设置实际验收的地图路径及 `G1_INTERNAL_MAP_VERIFIED=1`。不要手工伪造许可。
+
+随后让 G1 留在该点，启动一次开机定位服务：
+
+```bash
+sudo systemctl start g1-ramp-v3-bootstrap.service
+sudo journalctl -u g1-ramp-v3-bootstrap.service -f -n 0 -o cat
+```
+
+成功后 `g1-map-point check` 才会通过，之后可用 `g1-map-point mark` 采集其它点。
 
 ## 6. 重新标定两条路线
 
@@ -160,6 +171,8 @@ straight_begin → turn_1 → turn_2 → turn_3 → straight_end
 ```
 
 返回顺序严格反向。先用官方 `goto` 逐点低风险验证，再串联路线。
+
+如果当前只建立了测试小地图，先完成软件功能验收；正式全景建图后必须清除旧地图运行状态并重新采集本节全部点位。执行 [TEST_MAP_TO_PANORAMA.md](TEST_MAP_TO_PANORAMA.md)，不要沿用测试地图坐标。
 
 ## 7. 启用开机服务
 
