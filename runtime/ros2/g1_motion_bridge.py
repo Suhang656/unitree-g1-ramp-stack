@@ -1360,6 +1360,45 @@ def main() -> None:
             )
 
 
+        @staticmethod
+        def _load_route_point(
+            point_name: str,
+        ) -> tuple[float, float, float]:
+            allowed_names = {
+                "straight_begin",
+                "straight_end",
+                "turn_1",
+                "turn_2",
+                "turn_3",
+            }
+            if point_name not in allowed_names:
+                raise ValueError("路线点名称不在白名单中")
+
+            point_root = (
+                PROJECT / "data" / "embodied_lab_panorama_v2"
+            )
+            point_path = point_root / f"{point_name}.json"
+            point = json.loads(
+                point_path.read_text(encoding="utf-8")
+            )
+
+            point_map = str(point.get("map_path", ""))
+            if point_map and point_map != INTERNAL_MAP_PATH:
+                raise ValueError(
+                    f"路线点{point_name}不属于当前地图："
+                    f"{point_map}"
+                )
+
+            values = (
+                float(point["x"]),
+                float(point["y"]),
+                float(point["yaw"]),
+            )
+            if not all(math.isfinite(value) for value in values):
+                raise ValueError(f"路线点{point_name}坐标无效")
+            return values
+
+
         def _navigate_to_guide_1_standby(
             self,
         ) -> tuple[bool, str]:
@@ -1414,6 +1453,20 @@ def main() -> None:
             with self.motion_lock:
                 self.stop_event.clear()
 
+                try:
+                    start_x, start_y, start_yaw = (
+                        self._load_route_point("straight_begin")
+                    )
+                except Exception as exc:
+                    self._publish_result(
+                        {
+                            "task_id": task_id,
+                            "state": "error",
+                            "error": f"读取当前地图起点失败：{exc}",
+                        }
+                    )
+                    return
+
                 if not self._ramp_odom_is_fresh():
                     self._publish_result(
                         {
@@ -1429,15 +1482,15 @@ def main() -> None:
 
                 self.get_logger().warning(
                     "RAMP_PREPARE_BEGIN："
-                    "目标S=(0.024735889031391838,-0.08662520735348705)，"
-                    "yaw=-0.3986063585212273"
+                    f"目标S=({start_x:.6f},{start_y:.6f})，"
+                    f"yaw={start_yaw:.6f}"
                 )
 
                 code = self._run_ramp_slam(
                     "goto",
-                    "0.024735889031391838",
-                    "-0.08662520735348705",
-                    "-0.3986063585212273",
+                    str(start_x),
+                    str(start_y),
+                    str(start_yaw),
                     timeout=30.0,
                 )
 
@@ -1463,8 +1516,8 @@ def main() -> None:
                 )
 
                 if self._wait_for_ramp_arrival(
-                    0.024735889031391838,
-                    -0.08662520735348705,
+                    start_x,
+                    start_y,
                 ):
                     self._publish_ramp_voice(
                         "已准备爬坡行走"
@@ -1500,6 +1553,23 @@ def main() -> None:
             with self.motion_lock:
                 self.stop_event.clear()
 
+                try:
+                    start_x, start_y, start_yaw = (
+                        self._load_route_point("straight_begin")
+                    )
+                    end_x, end_y, end_yaw = (
+                        self._load_route_point("straight_end")
+                    )
+                except Exception as exc:
+                    self._publish_result(
+                        {
+                            "task_id": task_id,
+                            "state": "error",
+                            "error": f"读取当前地图直线路线失败：{exc}",
+                        }
+                    )
+                    return
+
                 localized = self._ramp_odom_is_fresh()
 
                 if localized:
@@ -1526,7 +1596,8 @@ def main() -> None:
                         self.get_logger().warning(
                             "RAMP_AUTO_LOCALIZATION_ATTEMPT："
                             f"{attempt}/3，"
-                            "初值=(-0.7783,0.4296,-0.3918)"
+                            f"初值=({start_x:.4f},"
+                            f"{start_y:.4f},{start_yaw:.4f})"
                         )
 
                         initialization_started = (
@@ -1536,9 +1607,9 @@ def main() -> None:
                         last_code = self._run_ramp_slam(
                             "initialize",
                             INTERNAL_MAP_PATH,
-                            "0.024735889031391838",
-                            "-0.08662520735348705",
-                            "-0.3986063585212273",
+                            str(start_x),
+                            str(start_y),
+                            str(start_yaw),
                             timeout=40.0,
                         )
 
@@ -1587,16 +1658,16 @@ def main() -> None:
 
                 self.get_logger().warning(
                     "RAMP_NAVIGATION_BEGIN："
-                    "S=(0.024735889031391838,-0.08662520735348705)，"
-                    "E=(14.9635,-6.7890)，"
-                    "yaw=-0.377997"
+                    f"S=({start_x:.4f},{start_y:.4f})，"
+                    f"E=({end_x:.4f},{end_y:.4f})，"
+                    f"yaw={end_yaw:.6f}"
                 )
 
                 code = self._run_ramp_slam(
                     "goto",
-                    "14.963454714172158",
-                    "-6.78900872898837",
-                    "-0.37799739368461505",
+                    str(end_x),
+                    str(end_y),
+                    str(end_yaw),
                     timeout=30.0,
                 )
 
@@ -1721,71 +1792,71 @@ def main() -> None:
                     current_x = self.straight_x
                     current_y = self.straight_y
 
+                try:
+                    start = self._load_route_point(
+                        "straight_begin"
+                    )
+                    end = self._load_route_point(
+                        "straight_end"
+                    )
+                    turn_1 = self._load_route_point("turn_1")
+                    turn_2 = self._load_route_point("turn_2")
+                    turn_3 = self._load_route_point("turn_3")
+                except Exception as exc:
+                    self._publish_result(
+                        {
+                            "task_id": task_id,
+                            "state": "error",
+                            "error": f"读取当前地图转弯路线失败：{exc}",
+                        }
+                    )
+                    return
+
                 if reverse:
                     route_name = "TURNING_RETURN"
-                    expected_x = 14.963454714172158
-                    expected_y = -6.78900872898837
-                    points = [
-                        (
-                            "P3",
-                            4.275112442278064,
-                            -1.9522534788074815,
-                            1.1540187559386106,
-                        ),
-                        (
-                            "P2",
-                            4.900046498890634,
-                            -0.5406526657681765,
-                            2.7140775913433135,
-                        ),
-                        (
-                            "P1",
-                            1.18586348379448,
-                            1.1515916561978627,
-                            -2.324076234423949,
-                        ),
-                        (
-                            "S",
-                            0.024735889031391838,
-                            -0.08662520735348705,
-                            -0.3986063585212273,
-                        ),
+                    expected_x, expected_y, _ = end
+                    route_positions = [
+                        ("turn_3", turn_3),
+                        ("turn_2", turn_2),
+                        ("turn_1", turn_1),
+                        ("straight_begin", start),
                     ]
                     completion_voice = (
                         "转弯返回已到达爬坡起点"
                     )
                 else:
                     route_name = "TURNING_FORWARD"
-                    expected_x = 0.024735889031391838
-                    expected_y = -0.08662520735348705
-                    points = [
-                        (
-                            "P1",
-                            1.18586348379448,
-                            1.1515916561978627,
-                            -0.42751506224647967,
-                        ),
-                        (
-                            "P2",
-                            4.900046498890634,
-                            -0.5406526657681765,
-                            -1.9875738976511825,
-                        ),
-                        (
-                            "P3",
-                            4.275112442278064,
-                            -1.9522534788074815,
-                            -0.4249527551699067,
-                        ),
-                        (
-                            "E",
-                            14.963454714172158,
-                            -6.78900872898837,
-                            -0.37799739368461505,
-                        ),
+                    expected_x, expected_y, _ = start
+                    route_positions = [
+                        ("turn_1", turn_1),
+                        ("turn_2", turn_2),
+                        ("turn_3", turn_3),
+                        ("straight_end", end),
                     ]
                     completion_voice = (
                         "转弯前进已到达固定终点"
+                    )
+
+                points = []
+                for index, (point_name, point) in enumerate(
+                    route_positions
+                ):
+                    target_x, target_y, marked_yaw = point
+                    if index == len(route_positions) - 1:
+                        target_yaw = marked_yaw
+                    else:
+                        next_point = route_positions[index + 1][1]
+                        target_yaw = math.atan2(
+                            next_point[1] - target_y,
+                            next_point[0] - target_x,
+                        )
+                    points.append(
+                        (
+                            point_name,
+                            target_x,
+                            target_y,
+                            target_yaw,
+                        )
                     )
 
                 start_distance = math.hypot(
@@ -1961,6 +2032,20 @@ def main() -> None:
             with self.motion_lock:
                 self.stop_event.clear()
 
+                try:
+                    start_x, start_y, start_yaw = (
+                        self._load_route_point("straight_begin")
+                    )
+                except Exception as exc:
+                    self._publish_result(
+                        {
+                            "task_id": task_id,
+                            "state": "error",
+                            "error": f"读取当前地图返回起点失败：{exc}",
+                        }
+                    )
+                    return
+
                 if not self._ramp_odom_is_fresh():
                     self.get_logger().error(
                         "RAMP_RETURN_NO_LOCALIZATION："
@@ -1987,15 +2072,15 @@ def main() -> None:
 
                 self.get_logger().warning(
                     "RAMP_RETURN_BEGIN："
-                    "目标S=(0.024735889031391838,-0.08662520735348705)，"
-                    "yaw=-0.3986063585212273"
+                    f"目标S=({start_x:.6f},{start_y:.6f})，"
+                    f"yaw={start_yaw:.6f}"
                 )
 
                 code = self._run_ramp_slam(
                     "goto",
-                    "0.024735889031391838",
-                    "-0.08662520735348705",
-                    "-0.3986063585212273",
+                    str(start_x),
+                    str(start_y),
+                    str(start_yaw),
                     timeout=30.0,
                 )
 
@@ -2027,8 +2112,8 @@ def main() -> None:
                 )
 
                 arrived = self._wait_for_ramp_arrival(
-                    0.024735889031391838,
-                    -0.08662520735348705,
+                    start_x,
+                    start_y,
                     timeout=420.0,
                     tolerance=0.35,
                     hold_seconds=1.0,
