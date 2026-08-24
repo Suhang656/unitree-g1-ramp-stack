@@ -36,7 +36,7 @@ docs/          架构、地图迁移、安全验收和完整部署手册
 
 仓库公开地址：<https://github.com/Suhang656/unitree-g1-ramp-stack>。
 
-先完整阅读 [新 G1 部署手册](docs/DEPLOY_NEW_G1.md)、[地图迁移说明](docs/MAP_MIGRATION.md)、[测试小地图切换全景地图](docs/TEST_MAP_TO_PANORAMA.md)、[开机定位说明](docs/BOOT_LOCALIZATION.md) 和 [安全验收](docs/SAFETY_ACCEPTANCE.md)。摘要如下：
+先完整阅读 [新 G1 部署手册](docs/DEPLOY_NEW_G1.md)、[当前地图直接启用完整项目](docs/RUN_COMPLETE_PROJECT.md)、[地图迁移说明](docs/MAP_MIGRATION.md)、[测试小地图切换全景地图](docs/TEST_MAP_TO_PANORAMA.md)、[开机定位说明](docs/BOOT_LOCALIZATION.md) 和 [安全验收](docs/SAFETY_ACCEPTANCE.md)。摘要如下：
 
 ```bash
 git clone https://github.com/Suhang656/unitree-g1-ramp-stack.git \

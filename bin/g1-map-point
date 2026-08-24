@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+CONFIG="/etc/default/g1-ramp-stack"
+if [[ -r "$CONFIG" ]]; then
+  set -a
+  source "$CONFIG"
+  set +a
+fi
+
 PROJECT="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
 DATA="$PROJECT/data/embodied_lab_panorama_v2"
 READY="$PROJECT/data/ramp_platform_v3/localization_ready.json"

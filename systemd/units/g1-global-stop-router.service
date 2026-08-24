@@ -1,7 +1,9 @@
 [Unit]
 Description=Unitree G1 highest-priority global stop router
-After=g1-local-assistant.service
-Wants=g1-local-assistant.service
+After=network-online.target
+Wants=network-online.target
+
+# 急停路由必须能够先于运动桥独立启动，不能反向拉起运动服务。
 
 [Service]
 Type=simple
