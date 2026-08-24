@@ -29,15 +29,19 @@ systemctl enable \
   g1-tour-executor.service \
   g1-ramp-last-pose.service
 
+systemctl start g1-global-stop-router.service
 systemctl start g1-voice-bridge.service
 systemctl start g1-navigation-services.service
 systemctl start g1-ramp-odom-cache.service
-systemctl start g1-ramp-v3-bootstrap.service
-systemctl start g1-local-assistant.service
-systemctl start g1-global-stop-router.service
+
+# Localization can legitimately retry for a long time. Do not make activation
+# or the emergency-stop/local-assistant services wait synchronously for it.
+systemctl start --no-block g1-ramp-v3-bootstrap.service
+systemctl start --no-block g1-local-assistant.service
 systemctl start g1-web-control.service
 systemctl start g1-tour-executor.service
-systemctl start g1-ramp-last-pose.service
+systemctl start --no-block g1-ramp-last-pose.service
 
-echo "服务已按依赖顺序启动。此脚本没有发布路线运动命令。"
+echo "服务启动请求已提交；开机定位可能继续在后台重试。"
+echo "此脚本没有发布路线运动命令。"
 echo "运行 g1-ramp status 查看状态。"

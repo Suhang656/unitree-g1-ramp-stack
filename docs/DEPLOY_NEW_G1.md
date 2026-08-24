@@ -62,6 +62,7 @@ sudo apt-get install -y ros-humble-rmw-cyclonedds-cpp python3-pip
 
 ```bash
 sudo ./deploy/install.sh --install-python-deps
+./deploy/verify_python_runtime.sh
 ```
 
 若 `/home/unitree/智能中控` 已存在，先人工审计，再执行：
@@ -71,6 +72,8 @@ sudo ./deploy/install.sh --allow-existing --install-python-deps
 ```
 
 该模式会先复制完整备份到 `/home/unitree/智能中控.before_portable_install_时间戳`。安装不会 enable/start 服务，也不会发布运动请求。
+
+`verify_python_runtime.sh` 必须输出 `PYTHON_RUNTIME_OK`。它使用与 systemd 相同的 `/usr/bin/python3`、ROS 环境以及 `/home/unitree/智能中控/vendor`，可在启动服务前一次发现 `httpx`、`pydantic` 等依赖缺失。
 
 ## 3. 配置目标机
 
@@ -181,6 +184,8 @@ cd /home/unitree/unitree-g1-ramp-stack
 sudo ./deploy/activate.sh
 ./deploy/verify.sh
 ```
+
+激活脚本不会同步等待可能无限重试的开机定位。本地助手、独立急停和网页服务可以先在线；只有生成与当前 `boot_id`、当前地图匹配的 `localization_ready.json` 后，路线运动才获得许可。
 
 检查运动桥必须只有一个：
 

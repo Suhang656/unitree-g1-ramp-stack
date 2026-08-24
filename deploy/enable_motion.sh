@@ -68,7 +68,9 @@ if [[ "$ENABLE_BOOT" == 1 ]]; then
 fi
 
 systemctl start g1-global-stop-router.service
-systemctl start g1-local-assistant.service
+# The assistant must not synchronously wait for the potentially long-running
+# boot localization job. Route commands remain guarded by localization_ready.
+systemctl start --no-block g1-local-assistant.service
 
 deadline=$((SECONDS + 20))
 while (( SECONDS < deadline )); do
