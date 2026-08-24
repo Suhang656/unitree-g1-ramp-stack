@@ -69,8 +69,14 @@ install -o root -g root -m 0755 "$ROOT/bin/g1-ramp" /usr/local/bin/g1-ramp
 install -o root -g root -m 0755 "$ROOT/bin/g1-map-point" /usr/local/bin/g1-map-point
 
 if [[ "$INSTALL_DEPS" == 1 ]]; then
-  /usr/bin/python3 -m pip install --target "$TARGET/vendor" -r "$ROOT/requirements.txt"
+  /usr/bin/python3 -m pip install \
+    --upgrade \
+    --target "$TARGET/vendor" \
+    -r "$ROOT/requirements.txt"
   chown -R unitree:unitree "$TARGET/vendor"
+  G1_PROJECT_DIR="$TARGET" \
+    G1_UNITREE_SDK2_PATH="${UNITREE_SDK2_PYTHON_PATH:-/home/unitree/unitree_sdk2_python}" \
+    /usr/bin/bash "$ROOT/deploy/verify_python_runtime.sh"
 fi
 
 systemctl daemon-reload

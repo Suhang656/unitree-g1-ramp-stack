@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -Eeuo pipefail
+set -Eeo pipefail
 
 source /opt/ros/humble/setup.bash
+set -u
 export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=0 ROS2CLI_DISABLE_DAEMON=1
 REQUEST=/smart_center/robot_action_request
@@ -9,7 +10,9 @@ RESULT=/smart_center/robot_action_result
 PROJECT="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
 
 publish() {
-  local target="$1" action="${2:-move}" task="cli-${target}-$(date +%s)"
+  local target="$1"
+  local action="${2:-move}"
+  local task="cli-${target}-$(date +%s)"
   ros2 topic pub --once "$REQUEST" std_msgs/msg/String \
     "{data: '{\"task_id\":\"$task\",\"source\":\"manual_cli\",\"action\":\"$action\",\"target\":\"$target\",\"speed\":0.4,\"confirmed\":true}'}"
 }

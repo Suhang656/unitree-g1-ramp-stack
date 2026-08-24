@@ -1,5 +1,48 @@
 # 故障排查
 
+## 本地助手反复重启：缺少 httpx 或 pydantic
+
+不要逐个向系统 Python 安装模块。完整依赖应安装到项目 `vendor`，且启动脚本必须加载该目录：
+
+```bash
+cd /home/unitree/unitree-g1-ramp-stack
+sudo systemctl stop g1-local-assistant.service
+sudo ./deploy/install.sh --allow-existing --install-python-deps
+./deploy/verify_python_runtime.sh
+sudo systemctl reset-failed g1-local-assistant.service
+sudo systemctl start g1-local-assistant.service
+```
+
+验证必须出现 `PYTHON_RUNTIME_OK`。服务启动后，下面两个进程必须各一份：
+
+```bash
+pgrep -af '/ros2/g1_motion_bridge.py|/ros2/smart_center_node.py'
+```
+
+## 本地助手一直 activating，定位任务长期运行
+
+当前版本已将本地助手与 `g1-ramp-v3-bootstrap.service` 的强依赖解除，并对定位使用 `--no-block`。更新安装文件后检查：
+
+```bash
+SYSTEMD_PAGER=cat systemctl show g1-local-assistant.service \
+  -p Requires -p Wants -p After -p ActiveState -p SubState
+```
+
+`Requires` 和 `After` 中不应出现 `g1-ramp-v3-bootstrap.service`。定位失败不会授权前进，但不应阻塞独立急停和助手进程。
+
+## g1-ramp 报 AMENT_TRACE_SETUP_FILES 或 target unbound variable
+
+这是旧版命令行工具在加载 ROS 前启用 `set -u`、并在同一条 `local` 语句引用 `target` 导致的。重新安装当前仓库的 `bin/g1-ramp`：
+
+```bash
+cd /home/unitree/unitree-g1-ramp-stack
+sudo ./deploy/install.sh --allow-existing
+bash -n /usr/local/bin/g1-ramp
+g1-ramp stop
+```
+
+`stop` 只发布停止请求；没有有效定位许可时不要执行前进或路线动作。
+
 所有排查先让 G1 静止并由操作员持有急停。除明确写出的测试外，以下命令不发布运动。
 
 ## `g1-map-point` 提示没有许可或不允许

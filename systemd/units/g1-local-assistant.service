@@ -1,7 +1,7 @@
 [Unit]
 Description=Unitree G1 local voice motion assistant
-Requires=g1-ramp-v3-bootstrap.service
-After=g1-ramp-v3-bootstrap.service
+Wants=g1-voice-bridge.service g1-navigation-services.service g1-ramp-odom-cache.service
+After=g1-voice-bridge.service g1-navigation-services.service g1-ramp-odom-cache.service
 
 [Service]
 Type=simple
