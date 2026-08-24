@@ -47,6 +47,7 @@ G1_NETWORK_INTERFACE=enP8p1s0 \
 ./deploy/check_prerequisites.sh
 
 sudo ./deploy/install.sh --install-python-deps
+./deploy/verify_python_runtime.sh
 sudoedit /etc/default/g1-ramp-stack
 ```
 
@@ -62,6 +63,10 @@ G1_INTERNAL_MAP_VERIFIED=1
 sudo ./deploy/activate.sh
 ./deploy/verify.sh
 ```
+
+`activate.sh` 不再同步等待可能长期重试的全局定位；急停、本地助手和网页会独立启动，定位在后台继续。没有当前 `boot_id` 的有效定位许可时，路线命令仍会被运动桥拒绝。
+
+现场从零复现和本次部署问题的统一修复方法见 [现场最佳复现流程](docs/FIELD_REPRODUCTION.md)。
 
 ## 用户命令
 

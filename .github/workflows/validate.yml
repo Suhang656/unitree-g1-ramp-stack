@@ -1,0 +1,16 @@
+name: Validate portable release
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell, Python and route invariants
+        run: bash deploy/validate_release.sh

@@ -12,10 +12,19 @@ git pull --ff-only
 
 sudo /usr/bin/bash \
 ./deploy/install.sh \
---allow-existing
+--allow-existing \
+--install-python-deps
 ```
 
 安装程序会先完整备份现有 `/home/unitree/智能中控`，不启动服务。
+
+立即验证 systemd 实际使用的系统 Python、ROS 与项目 `vendor` 环境：
+
+```bash
+./deploy/verify_python_runtime.sh
+```
+
+必须输出 `PYTHON_RUNTIME_OK`。不要只执行裸的 `/usr/bin/python3 -c 'import httpx'`；它不能证明 systemd 启动脚本已经加载项目 `vendor`。
 
 ## 2. 启动真实运动链路
 
@@ -53,6 +62,8 @@ pgrep -af '/ros2/g1_motion_bridge.py'
 ```
 
 `pgrep` 必须只有一个运动桥。不要使用 `nohup` 手工启动第二份。
+
+脚本使用非阻塞方式提交本地助手启动，不会再被持续重试的 `g1-ramp-v3-bootstrap.service` 卡住。定位尚未成功时，停止命令可用，但前进和路线命令仍会被定位许可门拒绝。
 
 ## 3. 急停命令
 
