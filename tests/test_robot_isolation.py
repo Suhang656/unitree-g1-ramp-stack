@@ -48,6 +48,15 @@ class RobotIsolationTests(unittest.TestCase):
         cli = self.read("bin/g1-ramp")
         self.assertIn("load_g1_command_plane.sh", cli)
         self.assertIn('\\"robot_id\\":\\"$G1_ROBOT_ID\\"', cli)
+
+    def test_cli_reads_external_odom_through_local_cache(self) -> None:
+        cli = self.read("bin/g1-ramp")
+        self.assertIn('/run/g1-ramp/odom.json', cli)
+        self.assertNotIn(
+            "ros2 topic echo /unitree/slam_relocation/odom",
+            cli,
+        )
+
     def test_motion_topics_have_no_shared_fallback(self) -> None:
         bridge = self.read("runtime/ros2/g1_motion_bridge.py")
         launcher = self.read("runtime/scripts/start_g1_motion_bridge.sh")
