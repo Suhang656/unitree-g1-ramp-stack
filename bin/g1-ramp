@@ -44,7 +44,37 @@ print("地图:", d.get("map_path", d.get("map")))
 print("姿态:", d.get("pose"))
 PY
     ;;
-  odom) timeout 15s ros2 topic echo /unitree/slam_relocation/odom nav_msgs/msg/Odometry --once --field pose.pose --qos-reliability reliable ;;
+  odom)
+    /usr/bin/python3 - "/run/g1-ramp/odom.json" <<'PY'
+import json
+import sys
+import time
+from pathlib import Path
+
+path = Path(sys.argv[1])
+if not path.exists():
+    print("里程计缓存不存在；请检查 g1-ramp-odom-cache.service 和官方重定位。")
+    raise SystemExit(1)
+
+data = json.loads(path.read_text(encoding="utf-8"))
+boot_id = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+if data.get("boot_id") != boot_id:
+    print("里程计缓存不属于本次开机，拒绝使用。")
+    raise SystemExit(1)
+
+age = time.time() - float(data.get("updated_at_unix", 0.0))
+if age < 0.0 or age > 3.0:
+    print(f"里程计缓存已过期：{age:.2f}秒；请检查官方重定位。")
+    raise SystemExit(1)
+
+print("position:")
+print(f"  x: {float(data['x'])}")
+print(f"  y: {float(data['y'])}")
+print("orientation:")
+print(f"  yaw: {float(data['yaw'])}")
+print(f"age_seconds: {age:.3f}")
+PY
+    ;;
   prepare) publish ramp_prepare ;;
   forward|straight-forward) publish continuous_forward ;;
   return|straight-return) publish ramp_return ;;
@@ -55,3 +85,4 @@ PY
   logs) journalctl -u g1-local-assistant.service -f -n 0 -o cat ;;
   *) echo "用法：g1-ramp {status|odom|prepare|straight-forward|straight-return|turning-forward|turning-return|stop|result|logs}" ;;
 esac
+
