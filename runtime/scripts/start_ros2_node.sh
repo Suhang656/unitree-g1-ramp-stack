@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-INTERFACE="${G1_NETWORK_INTERFACE:-enP8p1s0}"
-export CYCLONEDDS_URI="<CycloneDDS><Domain Id=\"any\"><General><Interfaces><NetworkInterface name=\"${INTERFACE}\"/></Interfaces></General></Domain></CycloneDDS>"
 set -Eeo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,6 +12,7 @@ fi
 
 source "$ROS_SETUP"
 set -u
+source "$PROJECT_DIR/scripts/load_g1_command_plane.sh"
 # Humble 的 rclpy 通常绑定系统 Python 3.10；不要直接混用 Conda Python 3.11。
 PYTHON_BIN="${SMART_CENTER_ROS_PYTHON:-/usr/bin/python3}"
 # install.sh --install-python-deps installs the application dependencies here.

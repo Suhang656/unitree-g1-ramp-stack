@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import re
 import time
 
@@ -19,6 +20,16 @@ STOP_COMMANDS = {
     "停止导览",
     "停止导览服务",
 }
+PREFIX = f"/{os.environ.get('G1_ROBOT_ID', '')}/smart_center"
+INPUT_TOPIC = os.environ.get("ROS2_INPUT_TOPIC", f"{PREFIX}/input_text")
+ACTION_TOPIC = os.environ.get(
+    "ROS2_ACTION_REQUEST_TOPIC",
+    f"{PREFIX}/robot_action_request",
+)
+FIXED_ROUTE_TOPIC = os.environ.get(
+    "G1_FIXED_ROUTE_TOPIC",
+    f"{PREFIX}/fixed_route_request",
+)
 
 
 def normalize(text: str) -> str:
@@ -35,19 +46,19 @@ class GlobalStopRouter(Node):
 
         self.route_publisher = self.create_publisher(
             String,
-            "/smart_center/fixed_route_request",
+            FIXED_ROUTE_TOPIC,
             10,
         )
 
         self.motion_publisher = self.create_publisher(
             String,
-            "/smart_center/robot_action_request",
+            ACTION_TOPIC,
             10,
         )
 
         self.create_subscription(
             String,
-            "/smart_center/input_text",
+            INPUT_TOPIC,
             self._on_input_text,
             10,
         )
@@ -55,7 +66,7 @@ class GlobalStopRouter(Node):
         # 兼容语音桥或台式机中继直接发出的路线停止指令。
         self.create_subscription(
             String,
-            "/smart_center/fixed_route_request",
+            FIXED_ROUTE_TOPIC,
             self._on_route_request,
             10,
         )
@@ -76,6 +87,7 @@ class GlobalStopRouter(Node):
                     "global-stop-"
                     + str(time.time_ns())
                 ),
+                "robot_id": os.environ.get("G1_ROBOT_ID", ""),
                 "action": "stop",
                 "confirmed": True,
             },

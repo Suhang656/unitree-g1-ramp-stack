@@ -1,7 +1,12 @@
 # Installed as /etc/default/g1-ramp-stack
 G1_PROJECT_DIR=/home/unitree/智能中控
-G1_NETWORK_INTERFACE=enP8p1s0
+# 必须在每台 G1 上分别填写；只能是连接 192.168.123.161 的内部网口。
+G1_UNITREE_INTERFACE=CHANGE_ME
 G1_CONTROL_IP=192.168.123.161
+# 每台 G1 必须使用不同的小写ID。项目运动话题会自动加入该前缀。
+G1_ROBOT_ID=CHANGE_ME
+# 项目命令总线强制仅本机通信；保留0用于兼容本机官方ROS组件。
+G1_COMMAND_ROS_DOMAIN_ID=0
 UNITREE_SDK2_PYTHON_PATH=/home/unitree/unitree_sdk2_python
 CYCLONEDDS_COMPAT_PREFIX=/home/unitree/cyclonedds-prefix
 UNITREE_ROS2_SETUP=/home/unitree/unitree_ros2/cyclonedds_ws/install/setup.bash
@@ -25,3 +30,12 @@ G1_LOCALIZATION_RETRY_SECONDS=2
 G1_SLAM_RESET_WAIT_SECONDS=3
 G1_WEB_PORT=8088
 G1_VOICE_VOLUME=90
+# 总运动授权。新部署默认拒绝除 stop 外的全部真实动作。
+# 只有在机器人进入保护架、完成单机隔离检查后才临时改为1。
+G1_ALLOW_REAL_MOTION=0
+# 发生过返回跌倒事故；完成日志取证和保护架单点验证前保持0。
+G1_ALLOW_RAMP_RETURN=0
+# 阻尼、零力矩、调试及其它FSM切换默认全部禁用。
+G1_ALLOW_MODE_COMMANDS=0
+# 导览包含手臂示教动作，完成独立安全网关验证前不自动启动。
+G1_ENABLE_TOUR=0

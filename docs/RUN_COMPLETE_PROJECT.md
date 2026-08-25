@@ -28,6 +28,17 @@ sudo /usr/bin/bash \
 
 ## 2. 启动真实运动链路
 
+先检查 `/etc/default/g1-ramp-stack`。每台机器必须使用不同的 `G1_ROBOT_ID`，`G1_UNITREE_INTERFACE` 必须是本机内部控制网口。首次启动先保持：
+
+```text
+G1_ALLOW_REAL_MOTION=0
+G1_ALLOW_RAMP_RETURN=0
+G1_ALLOW_MODE_COMMANDS=0
+G1_ENABLE_TOUR=0
+```
+
+完成本机隔离、保护架和急停验收后，只在当前目标 G1 把 `G1_ALLOW_REAL_MOTION=1`。`enable_motion.sh` 会在总开关不是 `1` 时拒绝启动真实运动链路。
+
 仅本次开机启动：
 
 ```bash
@@ -100,14 +111,15 @@ straight_begin → turn_1 → turn_2 → turn_3 → straight_end
 
 运动桥会在每次路线命令开始时直接读取这些 JSON 点位；重新标点后不需要修改 Python 源码，也不需要再手工填写旧版 `route.json`。转弯路线的中间朝向根据相邻新点位自动计算，终点朝向使用标点时保存的朝向。
 
-## 5. 启用网页、语音和导览
+## 5. 启用网页和语音
 
 ```bash
 sudo systemctl enable --now \
 g1-voice-bridge.service \
-g1-web-control.service \
-g1-tour-executor.service
+g1-web-control.service
 ```
+
+导览包含示教手臂动作，默认保持 `G1_ENABLE_TOUR=0`。完成单机安全验证后再单独启用导览执行器。
 
 网页令牌：
 
@@ -132,9 +144,7 @@ g1-ramp odom
 
 g1-ramp prepare
 g1-ramp straight-forward
-g1-ramp straight-return
 g1-ramp turning-forward
-g1-ramp turning-return
 
 g1-ramp stop
 g1-ramp result
@@ -144,10 +154,10 @@ g1-ramp logs
 对应语音指令保持不变：
 
 - “小智小智，直线前进”
-- “小智小智，直线返回”
 - “小智小智，转弯前进”
-- “小智小智，转弯返回”
 - “小智小智，停止”
+
+直线返回和转弯返回仍须在对应安全锁解除后测试。发生过返回卸力或跌倒事故时，保持 `G1_ALLOW_RAMP_RETURN=0`，不得用语音、网页或 CLI 绕过。
 
 ## 7. 后续更换全景地图
 

@@ -19,7 +19,7 @@ ip -br -4 address
 ip route get 192.168.123.161
 ```
 
-两台 G1 出厂镜像可能有相同 hostname，必须用 `machine-id` 和无线 MAC 区分。
+两台 G1 出厂镜像可能有相同 hostname，克隆镜像也可能带来相同 `machine-id`。记录无线 MAC 用于现场识别，并在项目配置中为每台机器人工指定不同的 `G1_ROBOT_ID`。
 
 ## 1. 获取公开仓库与只读检查
 
@@ -44,7 +44,7 @@ scp -r unitree-g1-ramp-stack unitree@<新G1无线IP>:/home/unitree/
 ```bash
 cd /home/unitree/unitree-g1-ramp-stack
 
-G1_NETWORK_INTERFACE=enP8p1s0 \
+G1_UNITREE_INTERFACE="$(ip route get 192.168.123.161 | awk '{for(i=1;i<=NF;i++) if($i==\"dev\") {print $(i+1); exit}}')" \
 G1_CONTROL_IP=192.168.123.161 \
 ./deploy/check_prerequisites.sh
 ```
@@ -85,8 +85,10 @@ sudoedit /home/unitree/智能中控/.env
 重点核对：
 
 ```text
-G1_NETWORK_INTERFACE=enP8p1s0
+G1_UNITREE_INTERFACE=enP8p1s0
 G1_CONTROL_IP=192.168.123.161
+G1_ROBOT_ID=target_g1
+G1_COMMAND_ROS_DOMAIN_ID=0
 UNITREE_SDK2_PYTHON_PATH=/home/unitree/unitree_sdk2_python
 CYCLONEDDS_COMPAT_PREFIX=/home/unitree/cyclonedds-prefix
 UNITREE_ROS2_SETUP=/home/unitree/unitree_ros2/cyclonedds_ws/install/setup.bash
@@ -96,9 +98,13 @@ G1_BOOT_AUTO_ADJUST=1
 G1_BOOT_SEARCH_RADIUS_M=0.50
 G1_BOOT_ACCEPT_MAX_POSITION_ERROR_M=0.50
 G1_BOOT_ACCEPT_MAX_YAW_ERROR_DEG=35
+G1_ALLOW_REAL_MOTION=0
+G1_ALLOW_RAMP_RETURN=0
+G1_ALLOW_MODE_COMMANDS=0
+G1_ENABLE_TOUR=0
 ```
 
-此时保持 `G1_INTERNAL_MAP_VERIFIED=0`。自调整参数的含义和安全边界见 [BOOT_LOCALIZATION.md](BOOT_LOCALIZATION.md)。
+`G1_UNITREE_INTERFACE` 必须采用本机 `ip route get 192.168.123.161` 返回的实际接口，不能复制另一台 G1 的无线接口名。每台机器的 `G1_ROBOT_ID` 必须不同。此时保持 `G1_INTERNAL_MAP_VERIFIED=0` 和全部运动锁为 `0`。自调整参数的含义和安全边界见 [BOOT_LOCALIZATION.md](BOOT_LOCALIZATION.md)。
 
 ## 4. 准备目标 G1 的官方地图
 
@@ -187,6 +193,8 @@ sudo ./deploy/activate.sh
 
 激活脚本不会同步等待可能无限重试的开机定位。本地助手、独立急停和网页服务可以先在线；只有生成与当前 `boot_id`、当前地图匹配的 `localization_ready.json` 后，路线运动才获得许可。
 
+此时运动桥虽然可在线，但 `G1_ALLOW_REAL_MOTION=0` 会拒绝除停止以外的全部真实动作。导览服务也不会在 `G1_ENABLE_TOUR=0` 时自动启动。
+
 检查运动桥必须只有一个：
 
 ```bash
@@ -197,12 +205,15 @@ pgrep -af g1_motion_bridge.py
 
 ## 8. 分级现场验收
 
-1. 只读：`g1-ramp status`、`g1-ramp odom`、网页状态；
-2. 停止链路：在机器人静止时测试网页停止、`g1-ramp stop`、语音停止；
-3. 单点官方 goto：0.5–1 m 平地短距离；
-4. 直线路线平地段；
-5. 转弯路线各段；
-6. 最后才在有保护措施的坡道测试。
+1. 保持 `G1_ALLOW_REAL_MOTION=0`，验证错误机器人 ID 和普通动作均被拒绝；
+2. 只读：`g1-ramp status`、`g1-ramp odom`、网页状态；
+3. 停止链路：在机器人静止时测试网页停止、`g1-ramp stop`、语音停止；
+4. 进入保护架后，仅在目标 G1 把 `G1_ALLOW_REAL_MOTION=1` 并重启本地助手；
+5. 单点官方 goto：0.5–1 m 平地短距离；
+6. 直线路线平地段和转弯路线各段；
+7. 最后才在有保护措施的坡道测试。
+
+发生过返回卸力或跌倒事故的站点必须一直保持 `G1_ALLOW_RAMP_RETURN=0`，完成日志取证、FSM 检查和保护架验证前不得测试直线返回。`G1_ALLOW_MODE_COMMANDS=0` 也不得解除。
 
 验收项见 [SAFETY_ACCEPTANCE.md](SAFETY_ACCEPTANCE.md)。
 
@@ -213,7 +224,7 @@ cat /home/unitree/智能中控/data/web_control/access_token
 ip -br -4 address
 ```
 
-浏览器打开 `http://G1无线IP:8088/` 并填写 Token。验证五条命令：直线前进、直线返回、转弯前进、转弯返回、停止。
+浏览器打开 `http://G1无线IP:8088/` 并填写 Token。网页通过 HTTP 访问，但其 ROS 动作话题只在目标 G1 本机存在。先验证停止；返回路线仍处于事故锁定时不要点击直线返回或转弯返回。
 
 ## 10. 停用与回滚
 

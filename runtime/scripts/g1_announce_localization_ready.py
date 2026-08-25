@@ -2,6 +2,7 @@
 
 import json
 import os
+import os
 import time
 from pathlib import Path
 
@@ -82,7 +83,10 @@ def main():
 
     publisher = node.create_publisher(
         String,
-        "/smart_center/response_text",
+        os.environ.get(
+            "ROS2_RESPONSE_TOPIC",
+            "/invalid_unconfigured_g1/response_text",
+        ),
         10,
     )
 

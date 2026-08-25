@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 PROJECT="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
-INTERFACE="${G1_NETWORK_INTERFACE:-enP8p1s0}"
+INTERFACE="${G1_UNITREE_INTERFACE:-}"
 CONTROL_IP="${G1_CONTROL_IP:-192.168.123.161}"
 SDK="${UNITREE_SDK2_PYTHON_PATH:-/home/unitree/unitree_sdk2_python}"
 ROS_SETUP="${UNITREE_ROS2_SETUP:-/home/unitree/unitree_ros2/cyclonedds_ws/install/setup.bash}"
@@ -20,11 +20,16 @@ check_path() {
 }
 
 echo "===== Unitree G1 部署前只读检查 ====="
+if [[ -z "$INTERFACE" || "$INTERFACE" == "CHANGE_ME" ]]; then
+  echo "[FAIL] Unitree内部网口          请显式设置 G1_UNITREE_INTERFACE"
+  failures=$((failures + 1))
+else
+  check_path "内部网卡" "/sys/class/net/$INTERFACE"
+fi
 check_path "ROS Humble" /opt/ros/humble/setup.bash
 check_path "Unitree ROS 2" "$ROS_SETUP"
 check_path "Unitree SDK2 Python" "$SDK/unitree_sdk2py"
 check_path "CycloneDDS compatibility" "$CYCLONE/lib"
-check_path "内部网卡" "/sys/class/net/$INTERFACE"
 check_path "项目父目录" "$(dirname "$PROJECT")"
 
 if ping -c 1 -W 1 "$CONTROL_IP" >/dev/null 2>&1; then
@@ -32,6 +37,16 @@ if ping -c 1 -W 1 "$CONTROL_IP" >/dev/null 2>&1; then
 else
   printf '[FAIL] %-24s %s\n' "内部控制单元" "$CONTROL_IP"
   failures=$((failures + 1))
+fi
+
+if [[ -n "$INTERFACE" && "$INTERFACE" != "CHANGE_ME" ]]; then
+  route_line="$(ip route get "$CONTROL_IP" 2>/dev/null | head -n 1 || true)"
+  if [[ "$route_line" == *" dev $INTERFACE "* ]]; then
+    printf '[OK]   %-24s %s\n' "内部控制路由" "$INTERFACE"
+  else
+    printf '[FAIL] %-24s %s\n' "内部控制路由" "${route_line:-不可达}"
+    failures=$((failures + 1))
+  fi
 fi
 
 if [[ "$(id -un)" == "unitree" ]]; then

@@ -26,8 +26,13 @@ systemctl enable \
   g1-local-assistant.service \
   g1-global-stop-router.service \
   g1-web-control.service \
-  g1-tour-executor.service \
   g1-ramp-last-pose.service
+
+if [[ "${G1_ENABLE_TOUR:-0}" == 1 ]]; then
+  systemctl enable g1-tour-executor.service
+else
+  systemctl disable g1-tour-executor.service >/dev/null 2>&1 || true
+fi
 
 systemctl start g1-global-stop-router.service
 systemctl start g1-voice-bridge.service
@@ -39,7 +44,9 @@ systemctl start g1-ramp-odom-cache.service
 systemctl start --no-block g1-ramp-v3-bootstrap.service
 systemctl start --no-block g1-local-assistant.service
 systemctl start g1-web-control.service
-systemctl start g1-tour-executor.service
+if [[ "${G1_ENABLE_TOUR:-0}" == 1 ]]; then
+  systemctl start g1-tour-executor.service
+fi
 systemctl start --no-block g1-ramp-last-pose.service
 
 echo "服务启动请求已提交；开机定位可能继续在后台重试。"

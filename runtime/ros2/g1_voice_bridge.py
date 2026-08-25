@@ -18,11 +18,11 @@ from app.g1_audio_messages import G1AsrFilter, G1WakeGate, parse_g1_audio_messag
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Unitree G1 voice bridge")
     parser.add_argument("network_interface", help="G1 network interface, for example enp3s0")
-    parser.add_argument("--input-topic", default="/smart_center/input_text")
-    parser.add_argument("--response-topic", default="/smart_center/response_text")
+    parser.add_argument("--input-topic", required=True)
+    parser.add_argument("--response-topic", required=True)
     parser.add_argument(
         "--fixed-route-topic",
-        default="/smart_center/fixed_route_request",
+        required=True,
     )
     parser.add_argument("--volume", type=int, default=80)
     parser.add_argument("--speaker-id", type=int, default=0, help="0=Chinese/auto, 1=English")

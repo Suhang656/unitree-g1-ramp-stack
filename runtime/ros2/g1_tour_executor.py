@@ -22,6 +22,18 @@ TOUR_CONFIG_PATH = (
     PROJECT / "data" / "embodied_lab_panorama_v2" / "tour_config.json"
 )
 GUIDE_1_TRIGGER = "下面我将展示爬坡行走"
+PREFIX = f"/{os.environ.get('G1_ROBOT_ID', '')}/smart_center"
+TOUR_RESULT_TOPIC = os.environ.get("G1_TOUR_RESULT_TOPIC", f"{PREFIX}/tour_result")
+TOUR_REQUEST_TOPIC = os.environ.get("G1_TOUR_REQUEST_TOPIC", f"{PREFIX}/tour_request")
+ACTION_REQUEST_TOPIC = os.environ.get(
+    "ROS2_ACTION_REQUEST_TOPIC",
+    f"{PREFIX}/robot_action_request",
+)
+ACTION_RESULT_TOPIC = os.environ.get(
+    "ROS2_ACTION_RESULT_TOPIC",
+    f"{PREFIX}/robot_action_result",
+)
+RESPONSE_TOPIC = os.environ.get("ROS2_RESPONSE_TOPIC", f"{PREFIX}/response_text")
 
 
 class TourExecutor(Node):
@@ -29,17 +41,17 @@ class TourExecutor(Node):
         super().__init__("g1_tour_executor")
         self.tour_result_publisher = self.create_publisher(
             String,
-            "/smart_center/tour_result",
+            TOUR_RESULT_TOPIC,
             10,
         )
         self.motion_request_publisher = self.create_publisher(
             String,
-            "/smart_center/robot_action_request",
+            ACTION_REQUEST_TOPIC,
             10,
         )
         self.speech_publisher = self.create_publisher(
             String,
-            "/smart_center/response_text",
+            RESPONSE_TOPIC,
             10,
         )
         self.arm_action_publisher = self.create_publisher(
@@ -49,19 +61,19 @@ class TourExecutor(Node):
         )
         self.create_subscription(
             String,
-            "/smart_center/tour_request",
+            TOUR_REQUEST_TOPIC,
             self._on_tour_request,
             10,
         )
         self.create_subscription(
             String,
-            "/smart_center/robot_action_result",
+            ACTION_RESULT_TOPIC,
             self._on_motion_result,
             10,
         )
         self.create_subscription(
             String,
-            "/smart_center/robot_action_request",
+            ACTION_REQUEST_TOPIC,
             self._on_motion_request,
             10,
         )
@@ -182,6 +194,7 @@ class TourExecutor(Node):
         task_id = f"tour-motion-{uuid4().hex[:14]}"
         payload: dict[str, Any] = {
             "task_id": task_id,
+            "robot_id": os.environ.get("G1_ROBOT_ID", ""),
             "source": "g1_tour_executor",
             "action": "move",
             "target": target,

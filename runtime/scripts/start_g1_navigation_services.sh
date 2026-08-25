@@ -2,7 +2,8 @@
 set -e
 
 PROJECT_DIR="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
-NETWORK_INTERFACE="${G1_NETWORK_INTERFACE:-enP8p1s0}"
+source "$PROJECT_DIR/scripts/require_g1_unitree_interface.sh"
+NETWORK_INTERFACE="$G1_UNITREE_INTERFACE"
 CONTROL_IP="${G1_CONTROL_IP:-192.168.123.161}"
 SDK_PATH="${UNITREE_SDK2_PYTHON_PATH:-/home/unitree/unitree_sdk2_python}"
 CYCLONE_PREFIX="${CYCLONEDDS_COMPAT_PREFIX:-/home/unitree/cyclonedds-prefix}"

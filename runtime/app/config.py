@@ -42,13 +42,14 @@ class Settings(BaseSettings):
     ros2_enabled: bool = False
     ros2_node_name: str = 'smart_center'
     ros2_session_title: str = 'ROS2 智能中控会话'
-    ros2_input_topic: str = '/smart_center/input_text'
-    ros2_response_topic: str = '/smart_center/response_text'
-    ros2_action_request_topic: str = '/smart_center/robot_action_request'
-    ros2_action_result_topic: str = '/smart_center/robot_action_result'
-    ros2_robot_status_topic: str = '/smart_center/robot_status'
-    ros2_status_topic: str = '/smart_center/status'
-    ros2_emergency_stop_topic: str = '/smart_center/emergency_stop'
+    # 正常启动脚本会用每台机器的 robot_id 覆盖这些占位值。
+    ros2_input_topic: str = '/unconfigured/smart_center/input_text'
+    ros2_response_topic: str = '/unconfigured/smart_center/response_text'
+    ros2_action_request_topic: str = '/unconfigured/smart_center/robot_action_request'
+    ros2_action_result_topic: str = '/unconfigured/smart_center/robot_action_result'
+    ros2_robot_status_topic: str = '/unconfigured/smart_center/robot_status'
+    ros2_status_topic: str = '/unconfigured/smart_center/status'
+    ros2_emergency_stop_topic: str = '/unconfigured/smart_center/emergency_stop'
     stt_provider: str = "disabled"
     whisper_model: str = "small"
     whisper_device: str = "auto"

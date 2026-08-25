@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import threading
 from concurrent.futures import Future
 from typing import Any
@@ -68,7 +69,9 @@ def main() -> None:
             return message
 
         def _publish_action(self, payload: dict[str, Any]) -> None:
-            self.action_publisher.publish(self._json_message(payload))
+            command = dict(payload)
+            command["robot_id"] = os.environ.get("G1_ROBOT_ID", "")
+            self.action_publisher.publish(self._json_message(command))
 
         def _on_input(self, message: Any) -> None:
             text = message.data.strip()

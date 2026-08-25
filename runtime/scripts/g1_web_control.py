@@ -931,6 +931,7 @@ class Handler(BaseHTTPRequestHandler):
             task_id = f"tour-{int(time.time())}-{uuid4().hex[:10]}"
             request_payload = {
                 "task_id": task_id,
+                "robot_id": os.environ.get("G1_ROBOT_ID", ""),
                 "source": "g1_web_control",
                 "action": "visit",
                 "point_name": point_name,
@@ -983,6 +984,7 @@ class Handler(BaseHTTPRequestHandler):
             payload["confirmed"] = True
         request_payload = {
             "task_id": task_id,
+            "robot_id": os.environ.get("G1_ROBOT_ID", ""),
             "source": "g1_web_control",
             **payload,
         }
@@ -1015,10 +1017,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8088)
-    parser.add_argument("--request-topic", default="/smart_center/robot_action_request")
-    parser.add_argument("--result-topic", default="/smart_center/robot_action_result")
-    parser.add_argument("--tour-request-topic", default="/smart_center/tour_request")
-    parser.add_argument("--tour-result-topic", default="/smart_center/tour_result")
+    parser.add_argument("--request-topic", required=True)
+    parser.add_argument("--result-topic", required=True)
+    parser.add_argument("--tour-request-topic", required=True)
+    parser.add_argument("--tour-result-topic", required=True)
     args = parser.parse_args()
 
     import rclpy

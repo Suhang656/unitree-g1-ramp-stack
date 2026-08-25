@@ -39,7 +39,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--interface",
-    default=os.environ.get("G1_NETWORK_INTERFACE", "enP8p1s0"),
+    default=os.environ.get("G1_UNITREE_INTERFACE", ""),
 )
 parser.add_argument(
     "--ready",
@@ -50,6 +50,8 @@ parser.add_argument(
     ),
 )
 args = parser.parse_args()
+if not args.interface:
+    raise SystemExit("必须通过 --interface 或 G1_UNITREE_INTERFACE 显式指定内部网口")
 
 CANDIDATE_REJECT_DELAY_SECONDS = max(
     0.0,

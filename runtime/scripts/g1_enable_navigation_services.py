@@ -13,8 +13,10 @@ from unitree_sdk2py.go2.robot_state.robot_state_client import (
 NETWORK_INTERFACE = (
     sys.argv[1]
     if len(sys.argv) > 1
-    else "enP8p1s0"
+    else ""
 )
+if not NETWORK_INTERFACE:
+    raise SystemExit("必须显式传入本机 Unitree 内部网口")
 
 SERVICES = (
     "lidar_driver",

@@ -10,6 +10,8 @@
 4. **定位许可仍是运动硬门**：运动桥在线不等于允许路线运动。许可必须绑定当前 `boot_id` 与当前地图。
 5. **运动桥严格单实例**：只能由 `g1-local-assistant.service` 管理，不手工 `python3`、不 `nohup` 启动第二份。
 6. **地图坐标不可迁移**：换地图后重新采集固定起点、共享终点、三个转弯点和全部导览点。
+7. **命令总线不能跨机器**：ROS 动作话题强制本机回环，并按每台 G1 独立的 `G1_ROBOT_ID` 命名。
+8. **内部网口不能写死**：`G1_UNITREE_INTERFACE` 由本机到 `192.168.123.161` 的路由确定，启动前必须核验。
 
 ## 二、全新机器安装
 
@@ -18,7 +20,7 @@ git clone https://github.com/Suhang656/unitree-g1-ramp-stack.git \
   /home/unitree/unitree-g1-ramp-stack
 cd /home/unitree/unitree-g1-ramp-stack
 
-G1_NETWORK_INTERFACE=enP8p1s0 \
+G1_UNITREE_INTERFACE="$(ip route get 192.168.123.161 | awk '{for(i=1;i<=NF;i++) if($i==\"dev\") {print $(i+1); exit}}')" \
 G1_CONTROL_IP=192.168.123.161 \
 ./deploy/check_prerequisites.sh
 
@@ -66,7 +68,7 @@ g1-map-point mark guide_3
 
 每次采样时 G1 必须站直、静止并保持到点后的目标朝向。两条坡道路线共用 `straight_begin` 和 `straight_end`；运动桥会在命令开始时读取最新 JSON。
 
-## 五、启用完整服务但不自动运动
+## 五、启用服务并保持真实运动锁定
 
 ```bash
 cd /home/unitree/unitree-g1-ramp-stack
@@ -80,9 +82,20 @@ pgrep -af '/ros2/g1_motion_bridge.py|/ros2/smart_center_node.py'
 
 助手和运动桥各只能有一个进程。`activate.sh` 不会发布动作；定位仍可在后台重试。
 
+配置中必须先保持：
+
+```text
+G1_ALLOW_REAL_MOTION=0
+G1_ALLOW_RAMP_RETURN=0
+G1_ALLOW_MODE_COMMANDS=0
+G1_ENABLE_TOUR=0
+```
+
+只有完成本机话题、robot ID、保护架和急停验收后，才在当前目标 G1 临时设置 `G1_ALLOW_REAL_MOTION=1`。源 G1 继续保持为 `0`。
+
 ## 六、分级运动验收
 
-机器人佩戴保护、操作员握持遥控急停，命令逐条执行，不串联复制：
+机器人佩戴保护、操作员握持遥控急停，命令逐条执行，不串联复制。发生过返回跌倒事故时不要执行任何返回命令：
 
 ```bash
 g1-ramp stop
@@ -90,9 +103,7 @@ g1-ramp status
 g1-ramp odom
 g1-ramp prepare
 g1-ramp straight-forward
-g1-ramp straight-return
 g1-ramp turning-forward
-g1-ramp turning-return
 ```
 
 先验证停止，再验证平地短距离，最后才测试坡道。若 `localization_ready.json` 不存在或不匹配当前开机，保持机器人静止并修复定位，不绕过许可。
@@ -107,6 +118,8 @@ g1-ramp turning-return
 | `target: unbound variable` | 同一行 local 声明提前引用变量 | target/action/task 分行赋值 |
 | 两个运动桥 | 手工启动与 systemd 重复 | `enable_motion.sh` 单实例拒绝策略 |
 | 服务在线但路线不能动 | 本次开机许可不存在 | 这是安全门；先完成定位，不复制或伪造许可 |
+| 新 G1 测试时源 G1 也运动 | 公共 Domain/话题经无线网络被另一运动桥发现 | 命令总线本机化、每机独立 `G1_ROBOT_ID`、动作消息校验 robot ID |
+| 返回时关节卸力或跌倒 | 原因尚需结合官方导航 FSM 和事故日志确认 | `G1_ALLOW_RAMP_RETURN=0` 硬锁返回，模式命令和导览也默认锁定 |
 
 ## 八、换正式全景地图
 

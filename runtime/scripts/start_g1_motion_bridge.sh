@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-INTERFACE="${G1_NETWORK_INTERFACE:-${G1_MOTION_NETWORK_INTERFACE:-enP8p1s0}}"
-export CYCLONEDDS_URI="<CycloneDDS><Domain Id=\"any\"><General><Interfaces><NetworkInterface name=\"${INTERFACE}\"/></Interfaces></General></Domain></CycloneDDS>"
 set -Eeo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,7 +9,11 @@ CYCLONEDDS_COMPAT_PREFIX="${CYCLONEDDS_COMPAT_PREFIX:-/home/unitree/cyclonedds-p
 source "$ROS_SETUP"
 set -u
 
-export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
+source "$PROJECT_DIR/scripts/require_g1_unitree_interface.sh"
+INTERFACE="$G1_UNITREE_INTERFACE"
+export CYCLONEDDS_URI="<CycloneDDS><Domain Id=\"any\"><General><Interfaces><NetworkInterface name=\"${INTERFACE}\"/></Interfaces></General></Domain></CycloneDDS>"
+source "$PROJECT_DIR/scripts/load_g1_command_plane.sh"
+
 export PYTHONPATH="$PROJECT_DIR:$PROJECT_DIR/vendor:$UNITREE_SDK2_PYTHON_PATH${PYTHONPATH:+:$PYTHONPATH}"
 if [[ -d "$CYCLONEDDS_COMPAT_PREFIX/lib" ]]; then
   export CYCLONEDDS_HOME="$CYCLONEDDS_COMPAT_PREFIX"
@@ -21,5 +23,6 @@ fi
 exec "${SMART_CENTER_ROS_PYTHON:-/usr/bin/python3}" \
   "$PROJECT_DIR/ros2/g1_motion_bridge.py" \
   "$INTERFACE" \
-  --request-topic "${ROS2_ACTION_REQUEST_TOPIC:-/smart_center/robot_action_request}" \
-  --result-topic "${ROS2_ACTION_RESULT_TOPIC:-/smart_center/robot_action_result}"
+  --request-topic "$ROS2_ACTION_REQUEST_TOPIC" \
+  --result-topic "$ROS2_ACTION_RESULT_TOPIC" \
+  --response-topic "$ROS2_RESPONSE_TOPIC"

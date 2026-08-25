@@ -12,7 +12,8 @@ PROJECT="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
 DATA="$PROJECT/data/embodied_lab_panorama_v2"
 READY="$PROJECT/data/ramp_platform_v3/localization_ready.json"
 MAP="${G1_INTERNAL_MAP_PATH:-/home/unitree/g1_internal_panorama_v2.pcd}"
-INTERFACE="${G1_NETWORK_INTERFACE:-enP8p1s0}"
+source "$PROJECT/scripts/require_g1_unitree_interface.sh"
+INTERFACE="$G1_UNITREE_INTERFACE"
 ROS_SETUP="${UNITREE_ROS2_SETUP:-/home/unitree/unitree_ros2/cyclonedds_ws/install/setup.bash}"
 
 usage(){ echo "用法：g1-map-point {mark <name>|show <name>|list|check}"; }

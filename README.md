@@ -43,13 +43,15 @@ git clone https://github.com/Suhang656/unitree-g1-ramp-stack.git \
   /home/unitree/unitree-g1-ramp-stack
 cd /home/unitree/unitree-g1-ramp-stack
 
-G1_NETWORK_INTERFACE=enP8p1s0 \
+G1_UNITREE_INTERFACE="$(ip route get 192.168.123.161 | awk '{for(i=1;i<=NF;i++) if($i==\"dev\") {print $(i+1); exit}}')" \
 ./deploy/check_prerequisites.sh
 
 sudo ./deploy/install.sh --install-python-deps
 ./deploy/verify_python_runtime.sh
 sudoedit /etc/default/g1-ramp-stack
 ```
+
+每台 G1 必须分别设置不同的 `G1_ROBOT_ID`，例如 `source_g1`、`target_g1`。项目动作总线强制只在本机回环通信，不能依靠相同 hostname 或可能被镜像复制的 `machine-id` 区分机器人。新安装默认保持 `G1_ALLOW_REAL_MOTION=0`、`G1_ALLOW_RAMP_RETURN=0` 和 `G1_ALLOW_MODE_COMMANDS=0`。
 
 随后在目标 G1 上创建或验证官方 SLAM 地图，采集新的起点和路线点。只有官方 `initialize` 成功后，才把：
 
@@ -108,6 +110,9 @@ cat /home/unitree/智能中控/data/web_control/access_token
 - 开机点位自调整记录绑定本机地图，并受人工起点位置/朝向双重阈值约束；
 - 点位采集要求本次开机定位有效，并检查静止采样波动；
 - 网页写操作要求随机 Token；
+- 动作 ROS 话题按 `G1_ROBOT_ID` 命名，并强制 `ROS_LOCALHOST_ONLY=1`；
+- Unitree 内部网口必须由 `G1_UNITREE_INTERFACE` 显式配置并通过路由检查；
+- 新部署的真实运动、返回路线、模式切换和导览默认锁定；
 - 全局停止路由独立运行；
 - `verify.sh` 仅做只读检查。
 

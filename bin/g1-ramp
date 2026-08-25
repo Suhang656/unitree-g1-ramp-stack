@@ -2,19 +2,23 @@
 set -Eeo pipefail
 
 source /opt/ros/humble/setup.bash
-set -u
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=0 ROS2CLI_DISABLE_DAEMON=1
-REQUEST=/smart_center/robot_action_request
-RESULT=/smart_center/robot_action_result
 PROJECT="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
+if [[ -r /etc/default/g1-ramp-stack ]]; then
+  set -a
+  source /etc/default/g1-ramp-stack
+  set +a
+fi
+source "$PROJECT/scripts/load_g1_command_plane.sh"
+set -u
+REQUEST="$ROS2_ACTION_REQUEST_TOPIC"
+RESULT="$ROS2_ACTION_RESULT_TOPIC"
 
 publish() {
   local target="$1"
   local action="${2:-move}"
   local task="cli-${target}-$(date +%s)"
   ros2 topic pub --once "$REQUEST" std_msgs/msg/String \
-    "{data: '{\"task_id\":\"$task\",\"source\":\"manual_cli\",\"action\":\"$action\",\"target\":\"$target\",\"speed\":0.4,\"confirmed\":true}'}"
+    "{data: '{\"task_id\":\"$task\",\"robot_id\":\"$G1_ROBOT_ID\",\"source\":\"manual_cli\",\"action\":\"$action\",\"target\":\"$target\",\"speed\":0.4,\"confirmed\":true}'}"
 }
 
 case "${1:-help}" in

@@ -31,6 +31,23 @@ if [[ "$EUID" -ne 0 ]]; then
   exit 1
 fi
 
+CONFIG=/etc/default/g1-ramp-stack
+[[ -f "$CONFIG" ]] || {
+  echo "缺少 $CONFIG，拒绝启动真实运动。" >&2
+  exit 1
+}
+source "$CONFIG"
+
+[[ "${G1_ALLOW_REAL_MOTION:-0}" == 1 ]] || {
+  echo "G1_ALLOW_REAL_MOTION 不是 1；真实运动总开关保持锁定。" >&2
+  echo "请先完成单机隔离、保护架和急停验证，再人工授权。" >&2
+  exit 1
+}
+
+PROJECT="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
+source "$PROJECT/scripts/require_g1_unitree_interface.sh"
+source "$PROJECT/scripts/load_g1_command_plane.sh"
+
 for unit in \
   g1-global-stop-router.service \
   g1-local-assistant.service

@@ -2,7 +2,9 @@
 set -Eeo pipefail
 
 PROJECT="${G1_PROJECT_DIR:-/home/unitree/智能中控}"
-INTERFACE="${G1_NETWORK_INTERFACE:-enP8p1s0}"
+source "$PROJECT/scripts/require_g1_unitree_interface.sh"
+INTERFACE="$G1_UNITREE_INTERFACE"
+source "$PROJECT/scripts/load_g1_command_plane.sh"
 MAP_PATH="${G1_INTERNAL_MAP_PATH:-/home/unitree/g1_internal_panorama_v2.pcd}"
 START_X="${G1_FIXED_START_X:-0.024735889031391838}"
 START_Y="${G1_FIXED_START_Y:--0.08662520735348705}"
@@ -177,8 +179,9 @@ PY
             -u CYCLONEDDS_URI \
             -u CYCLONEDDS_HOME \
             RMW_IMPLEMENTATION=rmw_fastrtps_cpp \
-            ROS_DOMAIN_ID=0 \
-            ROS_LOCALHOST_ONLY=0 \
+            ROS_DOMAIN_ID="$G1_COMMAND_ROS_DOMAIN_ID" \
+            ROS_LOCALHOST_ONLY=1 \
+            ROS2_RESPONSE_TOPIC="$ROS2_RESPONSE_TOPIC" \
             /usr/bin/python3 -u \
             "$ANNOUNCER" \
             || echo "定位成功，但语音播报发送失败" >&2

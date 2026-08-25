@@ -12,7 +12,6 @@ fi
 
 source "$ROS_SETUP"
 set -u
-export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
 PYTHON_BIN="${SMART_CENTER_ROS_PYTHON:-/usr/bin/python3}"
 UNITREE_SDK2_PYTHON_PATH="${UNITREE_SDK2_PYTHON_PATH:-/home/unitree/unitree_sdk2_python}"
 CYCLONEDDS_COMPAT_PREFIX="${CYCLONEDDS_COMPAT_PREFIX:-/home/unitree/cyclonedds-prefix}"
@@ -27,7 +26,9 @@ if [[ -d "$CYCLONEDDS_COMPAT_PREFIX/lib" ]]; then
 fi
 export PYTHONPATH="$PROJECT_DIR:$PROJECT_DIR/vendor:$UNITREE_SDK2_PYTHON_PATH${PYTHONPATH:+:$PYTHONPATH}"
 
-G1_VOICE_NETWORK_INTERFACE="${G1_VOICE_NETWORK_INTERFACE:-${G1_NETWORK_INTERFACE:-enP8p1s0}}"
+source "$PROJECT_DIR/scripts/require_g1_unitree_interface.sh"
+G1_VOICE_NETWORK_INTERFACE="$G1_UNITREE_INTERFACE"
+source "$PROJECT_DIR/scripts/load_g1_command_plane.sh"
 G1_VOICE_VOLUME="${G1_VOICE_VOLUME:-60}"
 G1_VOICE_WAKE_WORD="${G1_VOICE_WAKE_WORD:-小智小智}"
 G1_VOICE_WAKE_ALIAS_1="${G1_VOICE_WAKE_ALIAS_1:-小志小志}"
@@ -39,6 +40,9 @@ G1_VOICE_ACCEPT_INTERIM="${G1_VOICE_ACCEPT_INTERIM:-true}"
 
 VOICE_ARGS=(
   "$G1_VOICE_NETWORK_INTERFACE"
+  --input-topic "$ROS2_INPUT_TOPIC"
+  --response-topic "$ROS2_RESPONSE_TOPIC"
+  --fixed-route-topic "$G1_FIXED_ROUTE_TOPIC"
   --volume "$G1_VOICE_VOLUME"
   --wake-word "$G1_VOICE_WAKE_WORD"
   --wake-alias "$G1_VOICE_WAKE_ALIAS_1"

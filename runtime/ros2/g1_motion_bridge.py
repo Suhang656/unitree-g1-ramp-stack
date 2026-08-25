@@ -32,7 +32,7 @@ from app.g1_motion_commands import (
 )
 
 PROJECT = Path(os.environ.get("G1_PROJECT_DIR", "/home/unitree/智能中控"))
-NETWORK_INTERFACE = os.environ.get("G1_NETWORK_INTERFACE", "enP8p1s0")
+NETWORK_INTERFACE = os.environ.get("G1_UNITREE_INTERFACE", "")
 SDK_PATH = os.environ.get(
     "UNITREE_SDK2_PYTHON_PATH",
     "/home/unitree/unitree_sdk2_python",
@@ -45,6 +45,10 @@ INTERNAL_MAP_PATH = os.environ.get(
     "G1_INTERNAL_MAP_PATH",
     "/home/unitree/g1_internal_panorama_v2.pcd",
 )
+ROBOT_ID = os.environ.get("G1_ROBOT_ID", "")
+ALLOW_REAL_MOTION = os.environ.get("G1_ALLOW_REAL_MOTION", "0") == "1"
+ALLOW_RAMP_RETURN = os.environ.get("G1_ALLOW_RAMP_RETURN", "0") == "1"
+ALLOW_MODE_COMMANDS = os.environ.get("G1_ALLOW_MODE_COMMANDS", "0") == "1"
 
 
 def main() -> None:
@@ -52,13 +56,21 @@ def main() -> None:
     parser.add_argument("network_interface")
     parser.add_argument(
         "--request-topic",
-        default="/smart_center/robot_action_request",
+        required=True,
     )
     parser.add_argument(
         "--result-topic",
-        default="/smart_center/robot_action_result",
+        required=True,
+    )
+    parser.add_argument(
+        "--response-topic",
+        required=True,
     )
     args = parser.parse_args()
+    if not NETWORK_INTERFACE or args.network_interface != NETWORK_INTERFACE:
+        raise SystemExit("运动桥网口必须与显式 G1_UNITREE_INTERFACE 完全一致")
+    if not ROBOT_ID:
+        raise SystemExit("运动桥要求显式配置 G1_ROBOT_ID")
 
     try:
         import rclpy
@@ -91,7 +103,7 @@ def main() -> None:
 
             self.ramp_voice_publisher = self.create_publisher(
                 String,
-                "/smart_center/response_text",
+                args.response_topic,
                 10,
             )
 
@@ -297,6 +309,18 @@ def main() -> None:
                 return
 
             task_id = str(raw_payload.get("task_id", ""))
+            request_robot_id = str(raw_payload.get("robot_id", ""))
+            if not ROBOT_ID or request_robot_id != ROBOT_ID:
+                self._publish_result(
+                    {
+                        "task_id": task_id,
+                        "state": "denied",
+                        "denied": True,
+                        "reason": "动作请求机器人ID不匹配",
+                    }
+                )
+                return
+
             payload = normalize_motion_payload(raw_payload)
             payload["task_id"] = task_id
 
@@ -323,7 +347,28 @@ def main() -> None:
                 )
                 return
 
+            if not ALLOW_REAL_MOTION:
+                self._publish_result(
+                    {
+                        "task_id": task_id,
+                        "state": "denied",
+                        "denied": True,
+                        "reason": "真实运动总开关未授权；仅允许停止命令",
+                    }
+                )
+                return
+
             if payload.get("action") == "mode":
+                if not ALLOW_MODE_COMMANDS:
+                    self._publish_result(
+                        {
+                            "task_id": task_id,
+                            "state": "denied",
+                            "denied": True,
+                            "reason": "运控模式切换已被站点安全配置禁用",
+                        }
+                    )
+                    return
                 self.stop_event.set()
 
                 threading.Thread(
@@ -420,6 +465,16 @@ def main() -> None:
                 return
 
             if payload.get("target") == RAMP_RETURN_TARGET:
+                if not ALLOW_RAMP_RETURN:
+                    self._publish_result(
+                        {
+                            "task_id": task_id,
+                            "state": "denied",
+                            "denied": True,
+                            "reason": "直线返回因跌倒事故调查被安全锁定",
+                        }
+                    )
+                    return
                 if self.motion_lock.locked():
                     self._publish_result(
                         {
