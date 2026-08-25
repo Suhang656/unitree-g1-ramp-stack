@@ -14,6 +14,11 @@ class RobotIsolationTests(unittest.TestCase):
         self.assertIn("export ROS_LOCALHOST_ONLY=1", helper)
         self.assertIn('G1_COMMAND_PREFIX="/${G1_ROBOT_ID}/smart_center"', helper)
         self.assertIn("G1_ROBOT_ID 未配置", helper)
+        self.assertIn(
+            'export ROS2_ACTION_REQUEST_TOPIC="${G1_COMMAND_PREFIX}/robot_action_request"',
+            helper,
+        )
+        self.assertNotIn("ROS2_ACTION_REQUEST_TOPIC:-", helper)
 
     def test_motion_bridge_requires_matching_robot_id(self) -> None:
         bridge = self.read("runtime/ros2/g1_motion_bridge.py")
@@ -59,3 +64,4 @@ class RobotIsolationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
