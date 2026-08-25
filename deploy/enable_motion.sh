@@ -2,24 +2,28 @@
 set -Eeuo pipefail
 
 ENABLE_BOOT=0
+UNLOCK_ALL=0
 
 usage() {
   cat <<'EOF'
-用法：sudo /usr/bin/bash ./deploy/enable_motion.sh [--enable-boot]
+用法：sudo /usr/bin/bash ./deploy/enable_motion.sh [--unlock-all] [--enable-boot]
 
 在地图与本次开机定位已经完成后，启动真实运动链路：
 1. 全局停止路由；
 2. 本地智能中控与唯一运动桥。
 
 --enable-boot  同时将两个服务设为开机自启
+--unlock-all   持久开启真实运动、返回路线和模式命令三个可选授权
 
 本脚本只启动服务，不发布前进、转弯、路线或姿态动作。
+--unlock-all 不会移除定位许可、robot_id、本机话题隔离或全局停止保护。
 EOF
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --enable-boot) ENABLE_BOOT=1 ;;
+    --unlock-all) UNLOCK_ALL=1 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "未知参数：$1" >&2; usage; exit 2 ;;
   esac
@@ -36,6 +40,30 @@ CONFIG=/etc/default/g1-ramp-stack
   echo "缺少 $CONFIG，拒绝启动真实运动。" >&2
   exit 1
 }
+
+if [[ "$UNLOCK_ALL" == 1 ]]; then
+  for key in \
+    G1_ALLOW_REAL_MOTION \
+    G1_ALLOW_RAMP_RETURN \
+    G1_ALLOW_MODE_COMMANDS
+  do
+    if ! grep -q "^${key}=" "$CONFIG"; then
+      echo "配置缺少 ${key}，未修改任何运动授权。" >&2
+      exit 1
+    fi
+  done
+
+  backup="${CONFIG}.before_unlock_all_$(date +%Y%m%d_%H%M%S)"
+  cp -a "$CONFIG" "$backup"
+  sed -i \
+    -e 's/^G1_ALLOW_REAL_MOTION=.*/G1_ALLOW_REAL_MOTION=1/' \
+    -e 's/^G1_ALLOW_RAMP_RETURN=.*/G1_ALLOW_RAMP_RETURN=1/' \
+    -e 's/^G1_ALLOW_MODE_COMMANDS=.*/G1_ALLOW_MODE_COMMANDS=1/' \
+    "$CONFIG"
+  echo "三个可选运动授权已持久开启。"
+  echo "配置备份：$backup"
+fi
+
 source "$CONFIG"
 
 [[ "${G1_ALLOW_REAL_MOTION:-0}" == 1 ]] || {
@@ -106,6 +134,9 @@ while (( SECONDS < deadline )); do
     printf '%s\n' "${bridges[0]}"
     echo
     echo "本脚本没有发布任何运动动作。"
+    echo "运动总授权：${G1_ALLOW_REAL_MOTION:-0}"
+    echo "返回路线授权：${G1_ALLOW_RAMP_RETURN:-0}"
+    echo "模式命令授权：${G1_ALLOW_MODE_COMMANDS:-0}"
     echo "停止命令：g1-ramp stop"
     exit 0
   fi

@@ -39,6 +39,26 @@ G1_ENABLE_TOUR=0
 
 完成本机隔离、保护架和急停验收后，只在当前目标 G1 把 `G1_ALLOW_REAL_MOTION=1`。`enable_motion.sh` 会在总开关不是 `1` 时拒绝启动真实运动链路。
 
+如果该目标 G1 已完成全部五条路线验收，并明确要求每次开机后无需再次解锁，可一次性持久开启三个可选授权：
+
+```bash
+cd /home/unitree/unitree-g1-ramp-stack
+
+sudo ./deploy/enable_motion.sh \
+  --unlock-all \
+  --enable-boot
+```
+
+脚本先备份 `/etc/default/g1-ramp-stack`，再写入：
+
+```text
+G1_ALLOW_REAL_MOTION=1
+G1_ALLOW_RAMP_RETURN=1
+G1_ALLOW_MODE_COMMANDS=1
+```
+
+它只修改授权并启动服务，不发布动作。定位许可、地图匹配、`robot_id` 校验、本机 ROS 话题隔离和 `g1-ramp stop` 均继续生效。不要通过删除运动桥判断代码实现“解锁”。
+
 仅本次开机启动：
 
 ```bash
@@ -157,7 +177,7 @@ g1-ramp logs
 - “小智小智，转弯前进”
 - “小智小智，停止”
 
-直线返回和转弯返回仍须在对应安全锁解除后测试。发生过返回卸力或跌倒事故时，保持 `G1_ALLOW_RAMP_RETURN=0`，不得用语音、网页或 CLI 绕过。
+直线返回和转弯返回仍须在对应安全锁解除后测试。只有完成返回路线独立验收后才使用 `--unlock-all`。发生过返回卸力或跌倒事故时，保持 `G1_ALLOW_RAMP_RETURN=0`，不得用语音、网页或 CLI 绕过。
 
 ## 7. 后续更换全景地图
 

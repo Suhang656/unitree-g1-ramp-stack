@@ -47,6 +47,22 @@ class DeploymentRuntimeTests(unittest.TestCase):
             motion,
         )
 
+    def test_full_motion_unlock_is_explicit_persistent_and_non_actuating(self):
+        motion = self.read("deploy/enable_motion.sh")
+        self.assertIn("--unlock-all", motion)
+        self.assertIn("G1_ALLOW_REAL_MOTION=1", motion)
+        self.assertIn("G1_ALLOW_RAMP_RETURN=1", motion)
+        self.assertIn("G1_ALLOW_MODE_COMMANDS=1", motion)
+        self.assertIn("before_unlock_all_", motion)
+        self.assertNotIn("g1-ramp straight-forward", motion)
+        self.assertNotIn("g1-ramp straight-return", motion)
+
+    def test_voice_bridge_uses_aliases_instead_of_strict_wake(self):
+        launcher = self.read("runtime/scripts/start_g1_voice_bridge.sh")
+        self.assertIn('--wake-alias "$G1_VOICE_WAKE_ALIAS_1"', launcher)
+        self.assertIn('--wake-alias "$G1_VOICE_WAKE_ALIAS_2"', launcher)
+        self.assertNotIn("--strict-wake", launcher)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -36,7 +36,7 @@ docs/          架构、地图迁移、安全验收和完整部署手册
 
 仓库公开地址：<https://github.com/Suhang656/unitree-g1-ramp-stack>。
 
-先完整阅读 [新 G1 部署手册](docs/DEPLOY_NEW_G1.md)、[当前地图直接启用完整项目](docs/RUN_COMPLETE_PROJECT.md)、[地图迁移说明](docs/MAP_MIGRATION.md)、[测试小地图切换全景地图](docs/TEST_MAP_TO_PANORAMA.md)、[开机定位说明](docs/BOOT_LOCALIZATION.md) 和 [安全验收](docs/SAFETY_ACCEPTANCE.md)。摘要如下：
+先完整阅读 [新 G1 部署手册](docs/DEPLOY_NEW_G1.md)、[当前地图直接启用完整项目](docs/RUN_COMPLETE_PROJECT.md)、[已验证目标 G1 配置](docs/VERIFIED_TARGET_G1.md)、[地图迁移说明](docs/MAP_MIGRATION.md)、[测试小地图切换全景地图](docs/TEST_MAP_TO_PANORAMA.md)、[开机定位说明](docs/BOOT_LOCALIZATION.md) 和 [安全验收](docs/SAFETY_ACCEPTANCE.md)。摘要如下：
 
 ```bash
 git clone https://github.com/Suhang656/unitree-g1-ramp-stack.git \
@@ -67,6 +67,14 @@ sudo ./deploy/activate.sh
 ```
 
 `activate.sh` 不再同步等待可能长期重试的全局定位；急停、本地助手和网页会独立启动，定位在后台继续。没有当前 `boot_id` 的有效定位许可时，路线命令仍会被运动桥拒绝。
+
+在单机隔离、定位、保护措施和急停全部验收后，可显式持久开启三个可选运动授权并设置运动链路开机自启：
+
+```bash
+sudo ./deploy/enable_motion.sh --unlock-all --enable-boot
+```
+
+该命令不会发布任何动作，也不会删除定位许可、`robot_id`、本机话题隔离和全局停止保护。授权生效后仍须先用 `g1-ramp status` 确认本次开机定位有效，再逐条执行路线命令。
 
 现场从零复现和本次部署问题的统一修复方法见 [现场最佳复现流程](docs/FIELD_REPRODUCTION.md)。
 
