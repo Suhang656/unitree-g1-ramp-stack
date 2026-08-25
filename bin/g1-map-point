@@ -43,7 +43,9 @@ case "${1:-}" in
     name="${2:-}"; [[ -n "$name" ]] || { usage; exit 2; }; valid_name "$name"; check_ready
     out="$DATA/$name.json"; [[ ! -e "$out" ]] || cp -a "$out" "$out.before_$(date +%Y%m%d_%H%M%S)"
     unset PYTHONPATH PYTHONHOME AMENT_PREFIX_PATH CMAKE_PREFIX_PATH COLCON_PREFIX_PATH CYCLONEDDS_HOME ROS_LOCALHOST_ONLY
+    set +u
     source /opt/ros/humble/setup.bash; source "$ROS_SETUP"
+    set -u
     export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=0 ROS2CLI_DISABLE_DAEMON=1
     export CYCLONEDDS_URI="<CycloneDDS><Domain Id=\"any\"><General><Interfaces><NetworkInterface name=\"$INTERFACE\"/></Interfaces></General></Domain></CycloneDDS>"
     echo "请让 G1 站直、静止，并保持目标朝向。"
@@ -75,3 +77,4 @@ PY
   check) check_ready ;;
   *) usage; exit 2 ;;
 esac
+
