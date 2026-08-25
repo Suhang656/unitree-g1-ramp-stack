@@ -35,6 +35,11 @@ class RobotIsolationTests(unittest.TestCase):
         self.assertIn('G1_ALLOW_REAL_MOTION", "0"', bridge)
         self.assertIn("G1_ALLOW_REAL_MOTION=0", config)
         self.assertIn("真实运动总开关未授权", bridge)
+        self.assertIn(
+            "== TURNING_RETURN_TARGET\n                    and not ALLOW_RAMP_RETURN",
+            bridge,
+        )
+        self.assertIn("转弯返回因跌倒事故调查被安全锁定", bridge)
 
     def test_unitree_interface_has_no_operational_default(self) -> None:
         config = self.read("config/g1-ramp-stack.example")
