@@ -22,14 +22,16 @@ export ROS_DOMAIN_ID="$G1_COMMAND_ROS_DOMAIN_ID"
 export ROS_LOCALHOST_ONLY=1
 export ROS2CLI_DISABLE_DAEMON=1
 
-export ROS2_INPUT_TOPIC="${ROS2_INPUT_TOPIC:-${G1_COMMAND_PREFIX}/input_text}"
-export ROS2_RESPONSE_TOPIC="${ROS2_RESPONSE_TOPIC:-${G1_COMMAND_PREFIX}/response_text}"
-export ROS2_ACTION_REQUEST_TOPIC="${ROS2_ACTION_REQUEST_TOPIC:-${G1_COMMAND_PREFIX}/robot_action_request}"
-export ROS2_ACTION_RESULT_TOPIC="${ROS2_ACTION_RESULT_TOPIC:-${G1_COMMAND_PREFIX}/robot_action_result}"
-export ROS2_ROBOT_STATUS_TOPIC="${ROS2_ROBOT_STATUS_TOPIC:-${G1_COMMAND_PREFIX}/robot_status}"
-export ROS2_STATUS_TOPIC="${ROS2_STATUS_TOPIC:-${G1_COMMAND_PREFIX}/status}"
-export ROS2_EMERGENCY_STOP_TOPIC="${ROS2_EMERGENCY_STOP_TOPIC:-${G1_COMMAND_PREFIX}/emergency_stop}"
-export G1_FIXED_ROUTE_TOPIC="${G1_FIXED_ROUTE_TOPIC:-${G1_COMMAND_PREFIX}/fixed_route_request}"
-export G1_TOUR_REQUEST_TOPIC="${G1_TOUR_REQUEST_TOPIC:-${G1_COMMAND_PREFIX}/tour_request}"
-export G1_TOUR_RESULT_TOPIC="${G1_TOUR_RESULT_TOPIC:-${G1_COMMAND_PREFIX}/tour_result}"
+# Security boundary: never allow legacy .env or a caller shell to replace these
+# local, robot-scoped topics with the old shared /smart_center names.
+export ROS2_INPUT_TOPIC="${G1_COMMAND_PREFIX}/input_text"
+export ROS2_RESPONSE_TOPIC="${G1_COMMAND_PREFIX}/response_text"
+export ROS2_ACTION_REQUEST_TOPIC="${G1_COMMAND_PREFIX}/robot_action_request"
+export ROS2_ACTION_RESULT_TOPIC="${G1_COMMAND_PREFIX}/robot_action_result"
+export ROS2_ROBOT_STATUS_TOPIC="${G1_COMMAND_PREFIX}/robot_status"
+export ROS2_STATUS_TOPIC="${G1_COMMAND_PREFIX}/status"
+export ROS2_EMERGENCY_STOP_TOPIC="${G1_COMMAND_PREFIX}/emergency_stop"
+export G1_FIXED_ROUTE_TOPIC="${G1_COMMAND_PREFIX}/fixed_route_request"
+export G1_TOUR_REQUEST_TOPIC="${G1_COMMAND_PREFIX}/tour_request"
+export G1_TOUR_RESULT_TOPIC="${G1_COMMAND_PREFIX}/tour_result"
 
