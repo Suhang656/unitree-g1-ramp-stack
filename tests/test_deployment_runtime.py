@@ -27,6 +27,14 @@ class DeploymentRuntimeTests(unittest.TestCase):
         self.assertIn('local target="$1"\n', script)
         self.assertIn('local task="cli-${target}-$(date +%s)"', script)
 
+    def test_map_point_disables_nounset_while_sourcing_ros(self):
+        script = self.read("bin/g1-map-point")
+        setup_index = script.index("source /opt/ros/humble/setup.bash")
+        disable_index = script.rindex("set +u", 0, setup_index)
+        enable_index = script.index("set -u", setup_index)
+        self.assertLess(disable_index, setup_index)
+        self.assertGreater(enable_index, setup_index)
+
     def test_long_localization_starts_are_nonblocking(self):
         activate = self.read("deploy/activate.sh")
         motion = self.read("deploy/enable_motion.sh")
@@ -42,3 +50,4 @@ class DeploymentRuntimeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
