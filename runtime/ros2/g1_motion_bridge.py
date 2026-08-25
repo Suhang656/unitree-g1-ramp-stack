@@ -439,6 +439,22 @@ def main() -> None:
                 TURNING_FORWARD_TARGET,
                 TURNING_RETURN_TARGET,
             }:
+                if (
+                    payload.get("target")
+                    == TURNING_RETURN_TARGET
+                    and not ALLOW_RAMP_RETURN
+                ):
+                    self._publish_result(
+                        {
+                            "task_id": task_id,
+                            "state": "denied",
+                            "denied": True,
+                            "reason": (
+                                "转弯返回因跌倒事故调查被安全锁定"
+                            ),
+                        }
+                    )
+                    return
                 if self.motion_lock.locked():
                     self._publish_result(
                         {
@@ -2350,3 +2366,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
